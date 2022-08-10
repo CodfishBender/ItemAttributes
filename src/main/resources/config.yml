@@ -1,0 +1,10 @@
+# ================================
+#     Item Attributes v1.0
+# ================================
+
+# Plugin prefix in chat
+TextPrefix: "&7[&aItemAttributes&7] &7"
+
+# Optional plugin intergration
+PluginSupport:
+  AdvancedEnchantments: true

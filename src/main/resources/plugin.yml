@@ -1,0 +1,13 @@
+name: ItemAttributes
+version: '${project.version}'
+main: com.budgienet.itemattributes.ItemAttributes
+api-version: 1.19
+authors: [ Eroserv ]
+description: Allows for quick and simple creation of items with custom NBT attributes with optional randomized values.
+website: budgienet.com
+commands:
+  itemattributes:
+    description: The main plugin command.
+    aliases: [itema]
+softdepend:
+  - AdvancedEnchantments
