@@ -42,6 +42,7 @@ public class ConstructTabCompleter implements TabCompleter {
                         names.add(player.getName());
                     }
                 }
+                names.add("help");
                 return names;
             }
             // Third arg
@@ -71,6 +72,9 @@ public class ConstructTabCompleter implements TabCompleter {
                     case "lore":
                         ia.autoList2.add(subArgs[0] + ":&cExample_lore|&7New_line");
                         return ia.autoList2;
+                    case "perm":
+                        ia.autoList2.add(subArgs[0] + ":perm.node");
+                        return ia.autoList2;
                     default:
                         break;
                 }
@@ -85,11 +89,11 @@ public class ConstructTabCompleter implements TabCompleter {
                         case "attackspeed":
                         case "knockbackres":
                         case "luck":
-                            ia.autoList2.add(subArgs[0] + ":<min>~<max>");
+                            ia.autoList2.add(subArgs[0] + ":1~2");
                             return ia.autoList2;
                     }
                 }
-                ia.autoList2.add(subArgs[0] + ":<number>");
+                ia.autoList2.add(subArgs[0] + ":1");
                 return ia.autoList2;
             } else if (subArgs.length == 3) {
                 switch (subArgs[0]) {
@@ -121,6 +125,9 @@ public class ConstructTabCompleter implements TabCompleter {
             }
             if ("lore:".contains(args[args.length - 1])) {
                 ia.autoList2.add("lore:");
+            }
+            if ("perm:".contains(args[args.length - 1])) {
+                ia.autoList2.add("perm:");
             }
             // Enchants
             for (String s : ia.enchNames) {

@@ -3,7 +3,9 @@
 # ================================
 
 # Plugin prefix in chat
-TextPrefix: "&7[&aItemAttributes&7] &7"
+TextPrefix: "&7[&aIA&7] &7"
+WeaponPermissionMessage: "&cYou cannot use this weapon at your rank."
+ArmorPermissionMessage: "&cYou cannot use this armor at your rank."
 
 # Optional plugin intergration
 PluginSupport:

@@ -17,15 +17,10 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 import java.util.logging.Level;
-
-/* When I programed this, I was the only person in
- * the world that understood it. Now only God knows.
- * Many comments have been left behind to try explain
- * this abomanation of a class.
- */
 
 public class ItemAttributesCommand implements CommandExecutor {
 
@@ -33,39 +28,63 @@ public class ItemAttributesCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
 
-        String arg = args[0].toLowerCase();
+        String arg = "";
+        if (args.length > 0) {
+            arg = args[0].toLowerCase();
+        }
 
         // Handle player command and console command separately
         if ((sender instanceof Player)) {
             final Player player = (Player) sender;
             // Permission checking
             if (!player.hasPermission(ia.basePermission)) {
-                player.sendMessage(ia.textUnknown);
+                player.sendMessage(ia.textNoPerm);
                 return false;
             }
 
             // Argument handling
-            if (arg.equals("help")) {
-                showHelp(player);
-                return true;
-            }
-            if (args.length > 2) {
+            if (args.length == 1) {
+                if (arg.equals("help")) {
+                    showHelp(player);
+                    return true;
+                }
+            } else {
                 if (arg.equals("give")) {
-                    if (!player.hasPermission(ia.givePermission)) player.sendMessage(ChatColor.RED + "No permission.");
+                    if (!player.hasPermission(ia.givePermission)) {
+                        player.sendMessage(ia.textNoPerm);
+                        return true;
+                    }
+                    if (args[1].equals("help")) {
+                        player.sendMessage(ia.textGiveHelp);
+                        return true;
+                    }
                     give(args, player);
                     return true;
                 }
                 if (arg.equals("giveitem")) {
-                    if (!player.hasPermission(ia.giveItemPermission)) player.sendMessage(ChatColor.RED + "No permission.");
+                    if (!player.hasPermission(ia.giveItemPermission)) {
+                        player.sendMessage(ia.textNoPerm);
+                        return true;
+                    }
                     giveItem(args, player);
                     return true;
                 }
             }
             // Catch unknown arg
+            player.sendMessage(ia.textUnknown);
             showHelp(player);
         } else { // Executed by console
-            if (args.length > 2) {
+            if (args.length == 1) {
+                if (arg.equals("help")) {
+                    showHelpConsole();
+                    return true;
+                }
+            } else {
                 if (arg.equals("give")) {
+                    if (args[1].equals("help")) {
+                        Bukkit.getServer().getConsoleSender().sendMessage(ia.textGiveHelp);
+                        return true;
+                    }
                     give(args, null);
                     return true;
                 }
@@ -124,6 +143,12 @@ public class ItemAttributesCommand implements CommandExecutor {
                 String lore = config.getString("items." + item + ".Lore");   // Get data
                 if (lore != null) {
                     newArg.add("lore:" + lore); // Arg[3+] >> Lore
+                }
+
+                // Permission
+                String perm = config.getString("items." + item + ".Perm");   // Get current argument
+                if (perm != null) {
+                    newArg.add("perm:" + perm); // Arg[3+] >> Lore
                 }
 
                 // Enchantments
@@ -225,6 +250,13 @@ public class ItemAttributesCommand implements CommandExecutor {
             }
 
 
+            // Permission
+            // Set perm as persistent data container
+            if (arg.toLowerCase().contains("perm:")) {
+                NamespacedKey key = new NamespacedKey(ia, "required-perm");
+                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, arg.replace("perm:", ""));
+                continue;
+            }
 
 
             // Enchantments
@@ -267,7 +299,6 @@ public class ItemAttributesCommand implements CommandExecutor {
                     }
                 }
             }
-
 
             // Attribute was found
             if (attribute != null) {
@@ -327,9 +358,9 @@ public class ItemAttributesCommand implements CommandExecutor {
                 // Check if slot provided
                 if (subArgs.length > 2) {
                     switch (subArgs[2].toLowerCase()) {
+                        case "hand": break;
                         case "chest": slot = EquipmentSlot.CHEST; break;
                         case "feet": slot = EquipmentSlot.FEET; break;
-                        case "hand": slot = EquipmentSlot.HAND; break;
                         case "head": slot = EquipmentSlot.HEAD; break;
                         case "legs": slot = EquipmentSlot.LEGS; break;
                         case "offhand": slot = EquipmentSlot.OFF_HAND; break;
@@ -401,6 +432,8 @@ public class ItemAttributesCommand implements CommandExecutor {
 
         String msg = "Gave " + targetPlayer.getName() + ": " + itemName + totalEnchantments + totalModifiers + aeEnchants;
         ia.log(Level.INFO, msg);
+
+        // Send player message
         if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.GOLD + msg); }
     } // End Method
 } // End Class
