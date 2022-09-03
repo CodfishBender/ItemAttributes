@@ -35,8 +35,8 @@ public class ArmorPerms implements Listener {
             String perm = container.get(key, PersistentDataType.STRING);
             if (perm == null) return;
             if (!p.hasPermission(perm)) {
-                String msg = MainConfig.instance.getConfig().getString("ItemPermissionMessage");
-                if (msg == null) msg = ChatColor.RED + "You cannot use this weapon at your rank.";
+                String msg = MainConfig.instance.getConfig().getString("ArmorPermissionMessage");
+                if (msg == null) msg = ChatColor.RED + "You cannot use this armour at your rank.";
                 p.sendMessage(msg);
                 event.setCancelled(true);
             }

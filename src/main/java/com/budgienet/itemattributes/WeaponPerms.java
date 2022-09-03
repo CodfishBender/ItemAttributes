@@ -39,7 +39,7 @@ public class WeaponPerms implements Listener {
             if (perm == null) return;
             if (!p.hasPermission(perm)) {
                 event.setCancelled(true);
-                String msg = MainConfig.instance.getConfig().getString("ItemPermissionMessage");
+                String msg = MainConfig.instance.getConfig().getString("WeaponPermissionMessage");
                 if (msg == null) msg = ChatColor.RED + "You cannot use this weapon at your rank.";
                 p.sendMessage(msg);
             }
