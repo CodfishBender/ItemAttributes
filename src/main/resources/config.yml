@@ -1,12 +1,11 @@
 # ================================
-#     Item Attributes v1.0
+#     Item Attributes v1.1
 # ================================
-
-# Plugin prefix in chat
-TextPrefix: "&7[&aIA&7] &7"
-WeaponPermissionMessage: "&cYou cannot use this weapon at your rank."
-ArmorPermissionMessage: "&cYou cannot use this armor at your rank."
 
 # Optional plugin intergration
 PluginSupport:
   AdvancedEnchantments: true
+
+# Items with this name cannot be fixed by /fix or /fix all, etc.
+ItemFixBlacklist:
+  - '&6&lSpecial Item'

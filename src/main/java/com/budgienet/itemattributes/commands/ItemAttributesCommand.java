@@ -2,6 +2,7 @@ package com.budgienet.itemattributes.commands;
 
 import com.budgienet.itemattributes.ItemAttributes;
 import com.budgienet.itemattributes.configs.ItemsConfig;
+import com.budgienet.itemattributes.configs.LangConfig;
 import net.advancedplugins.ae.api.AEAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -24,46 +25,51 @@ import java.util.logging.Level;
 
 public class ItemAttributesCommand implements CommandExecutor {
 
-    private final ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
+    private ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
+    final private LangConfig lang = LangConfig.instance;
 
     public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
-
-        String arg = "";
-        if (args.length > 0) {
-            arg = args[0].toLowerCase();
-        }
 
         // Handle player command and console command separately
         if ((sender instanceof Player)) {
             final Player player = (Player) sender;
             // Permission checking
             if (!player.hasPermission(ia.basePermission)) {
-                player.sendMessage(ia.textNoPerm);
+                player.sendMessage(lang.textNoPerm);
                 return false;
             }
 
             // Argument handling
             if (args.length == 1) {
-                if (arg.equals("help")) {
+                if (args[0].equals("help")) {
                     showHelp(player);
                     return true;
+                } else if (args[0].equals("reload")) {
+                    player.sendMessage(lang.textPrefix + "Reloading plugin...");
+                    try {
+                        ia.loadPlugin();
+                    } catch(Exception e) {
+                        player.sendMessage(lang.textPrefix + ChatColor.RED + "An error occured while reloading, please check the console!");
+                        return true;
+                    }
+                    player.sendMessage(lang.textPrefix + "Reload done!");
+                    return true;
                 }
-            } else {
-                if (arg.equals("give")) {
+            } else { // More than 1 argument
+                if (args[0].equals("give")) {
                     if (!player.hasPermission(ia.givePermission)) {
-                        player.sendMessage(ia.textNoPerm);
+                        player.sendMessage(lang.textNoPerm);
                         return true;
                     }
                     if (args[1].equals("help")) {
-                        player.sendMessage(ia.textGiveHelp);
+                        player.sendMessage(lang.textGiveHelp);
                         return true;
                     }
                     give(args, player);
                     return true;
-                }
-                if (arg.equals("giveitem")) {
+                } else if (args[0].equals("giveitem")) {
                     if (!player.hasPermission(ia.giveItemPermission)) {
-                        player.sendMessage(ia.textNoPerm);
+                        player.sendMessage(lang.textNoPerm);
                         return true;
                     }
                     giveItem(args, player);
@@ -71,24 +77,24 @@ public class ItemAttributesCommand implements CommandExecutor {
                 }
             }
             // Catch unknown arg
-            player.sendMessage(ia.textUnknown);
+            player.sendMessage(lang.textUnknown);
             showHelp(player);
         } else { // Executed by console
             if (args.length == 1) {
-                if (arg.equals("help")) {
+                if (args[0].equals("help")) {
                     showHelpConsole();
                     return true;
                 }
             } else {
-                if (arg.equals("give")) {
+                if (args[0].equals("give")) {
                     if (args[1].equals("help")) {
-                        Bukkit.getServer().getConsoleSender().sendMessage(ia.textGiveHelp);
+                        Bukkit.getServer().getConsoleSender().sendMessage(lang.textGiveHelp);
                         return true;
                     }
                     give(args, null);
                     return true;
                 }
-                if (arg.equals("giveitem")) {
+                if (args[0].equals("giveitem")) {
                     giveItem(args, null);
                     return true;
                 }
@@ -100,13 +106,15 @@ public class ItemAttributesCommand implements CommandExecutor {
     }
 
     private void showHelp(final Player player) {
-        player.sendMessage(ia.textHelp);
+        player.sendMessage(lang.textHelp);
     }
 
     private void showHelpConsole() {
-        Bukkit.getServer().getConsoleSender().sendMessage(ia.textHelp);
+        Bukkit.getServer().getConsoleSender().sendMessage(lang.textHelp);
     }
     private void giveItem(final String[] args, Player player) {
+
+        ia = ItemAttributes.getPlugin(ItemAttributes.class);
 
         // Construct a string of arguments to be used by give()
 
@@ -128,7 +136,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 if (m == null) {
                     String msg = "Missing material: " + item;
                     ia.log(Level.SEVERE, msg);
-                    if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                     return;
                 }
                 newArg.add(m); // Arg[2] >> Material
@@ -149,6 +157,12 @@ public class ItemAttributesCommand implements CommandExecutor {
                 String perm = config.getString("items." + item + ".Perm");   // Get current argument
                 if (perm != null) {
                     newArg.add("perm:" + perm); // Arg[3+] >> Lore
+                }
+
+                // Maxduradamage
+                String maxduradmg = config.getString("items." + item + ".MaxDuraDamage");   // Get current argument
+                if (maxduradmg != null) {
+                    newArg.add("perm:" + maxduradmg); // Arg[3+] >> Lore
                 }
 
                 // Enchantments
@@ -189,7 +203,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         if (targetPlayer == null) {
             String msg = "Cannot find player: " + args[1];
             ia.log(Level.SEVERE, msg);
-            if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
             return;
         }
         // Create item stack
@@ -197,7 +211,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         if (mat == null) {
             String msg = "Unknown material: " + args[2];
             ia.log(Level.SEVERE, msg);
-            if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
             return;
         }
         ItemStack itemStack = new ItemStack(mat);
@@ -259,6 +273,24 @@ public class ItemAttributesCommand implements CommandExecutor {
             }
 
 
+            // Max Dura
+            // Set the maximum durability loss from a single hit
+            if (arg.toLowerCase().contains("maxduradamage:")) {
+                try {
+                    Integer.parseInt(subArgs[1]); // Test if a number
+                    NamespacedKey key = new NamespacedKey(ia, "maxduradamage");
+                    meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, arg.replace("maxduradamage:", ""));
+                    continue;
+                }
+                catch (NumberFormatException ex) {
+                    String msg = "Not a number: " + arg;
+                    ia.log(Level.SEVERE, msg);
+                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                    return;
+                }
+            }
+
+
             // Enchantments
             // Attempt to find the Enchant enum
             Enchantment enchant = Enchantment.getByKey(NamespacedKey.fromString(subArgs[0].toLowerCase()));
@@ -277,7 +309,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 catch (NumberFormatException ex) {
                     String msg = "Not a number: " + arg;
                     ia.log(Level.SEVERE, msg);
-                    if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                     return;
                 }
             }
@@ -304,7 +336,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             if (attribute != null) {
                 String numArg = subArgs[1];
                 float[] range = {0f, 0f};
-                float num = 0f;
+                float num;
 
                 // Check if percentage
                 AttributeModifier.Operation attMod = (numArg.contains("%")) ? AttributeModifier.Operation.MULTIPLY_SCALAR_1 : AttributeModifier.Operation.ADD_NUMBER;
@@ -318,7 +350,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     if (argRange.length > 2) {
                         String msg = "Cannot recognize range: " + numArg;
                         ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                         return;
                     }
                     // Verify numbers in range
@@ -328,7 +360,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         } catch (NumberFormatException ex) {
                             String msg = "Cannot parse number: " + argRange[ii];
                             ia.log(Level.SEVERE, msg);
-                            if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                             return;
                         }
                     }
@@ -337,7 +369,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     if (range[0] >= range[1]) {
                         String msg = "Min cannot be higher than max: " + Arrays.toString(argRange);
                         ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                         return;
                     }
                     num = ((float)Math.random() * (range[1] - range[0])) + range[0];
@@ -347,13 +379,13 @@ public class ItemAttributesCommand implements CommandExecutor {
                     } catch (NumberFormatException ex) {
                         String msg = "Cannot parse number: " + numArg;
                         ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                         return;
                     }
                 }
 
                 EquipmentSlot slot = EquipmentSlot.HAND;
-                AttributeModifier modifier = null;
+                AttributeModifier modifier;
 
                 // Check if slot provided
                 if (subArgs.length > 2) {
@@ -367,7 +399,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         default:
                             String msg = "Unknown slot: " + subArgs[2];
                             ia.log(Level.SEVERE, msg);
-                            if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                             return;
                     }
                 } else {
@@ -378,6 +410,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     else if (iName.contains("leggings")) slot = EquipmentSlot.LEGS;
                     else if (iName.contains("boots")) slot = EquipmentSlot.FEET;
                     else if (iName.contains("shield")) slot = EquipmentSlot.OFF_HAND;
+                    else if (iName.contains("elytra")) slot = EquipmentSlot.CHEST;
                 }
 
                 modifier = new AttributeModifier(UUID.randomUUID(), subArgs[0], num, attMod, slot);
@@ -391,7 +424,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             // Catch all non-recognized arguments
             String msg ="Unknown argument: " + arg;
             ia.log(Level.SEVERE, msg);
-            if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
             return;
         } // End For
 
@@ -414,15 +447,12 @@ public class ItemAttributesCommand implements CommandExecutor {
                     catch (NumberFormatException ex) {
                         String msg = "Not a number: " + args[i];
                         ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.RED + msg); }
+                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
                         return;
                     }
                 }
             }
         } // End AE Support
-
-        // Give item to player
-        targetPlayer.getInventory().addItem(itemStack);
 
         // Construct console message
         String totalModifiers = (meta.getAttributeModifiers() == null) ? "" : " Attributes:" + meta.getAttributeModifiers().size();
@@ -434,6 +464,21 @@ public class ItemAttributesCommand implements CommandExecutor {
         ia.log(Level.INFO, msg);
 
         // Send player message
-        if (player != null) { player.sendMessage(ia.textPrefix + ChatColor.GOLD + msg); }
+        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.GOLD + msg); }
+
+        // Give item to player
+        // Check if inventory is full
+        if (targetPlayer.getInventory().firstEmpty() == -1) {
+            // Drop item on player
+            targetPlayer.getWorld().dropItem(targetPlayer.getLocation(), itemStack);
+            // Send message to recipient
+            targetPlayer.sendMessage(ChatColor.YELLOW + "No inventory space! " + meta.getDisplayName() + ChatColor.YELLOW + " was dropped on the ground!");
+        } else {
+            // Send item to player inventory
+            targetPlayer.getInventory().addItem(itemStack);
+            // Send message to recipient
+            targetPlayer.sendMessage(ChatColor.YELLOW + "You've recieved: " + meta.getDisplayName());
+        }
+
     } // End Method
 } // End Class

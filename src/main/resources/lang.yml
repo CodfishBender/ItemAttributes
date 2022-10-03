@@ -1,0 +1,12 @@
+# Plugin prefix in chat
+
+Chat_Prefix: "&7[&aIA&7] &7"
+Unknown_Command: "&cUnknown command."
+No_Permission: "&cNo permission."
+
+# Use {item} for the items name
+Not_Fixable: "&cThis item cannot be fixed with /fix."
+Not_Fixable_All: "&cThere's an unfixable item in your inv: {item}"
+
+No_Weapon_Permission: "&cYou cannot use this weapon at your rank."
+No_Armor_Permission: "&cYou cannot use this armor at your rank."

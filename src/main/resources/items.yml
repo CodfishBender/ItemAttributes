@@ -1,0 +1,32 @@
+items:
+  ExampleItem:
+    # REQUIRED
+    # Materials can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+    Material: IRON_BOOTS
+
+    # OPTIONAL
+    # The display name on the item
+    Name: '&7&oAged Boots'
+
+    # OPTIONAL
+    # Multiple lines must be separated using |
+    Lore: '&7Made of steel.|&7Old but reliable.'
+
+    # OPTIONAL
+    # Supports any vanilla enchant or AdvancedEnchantments
+    Enchants: protection:1 unbreaking:1
+
+    # OPTIONAL
+    # Possible attributes: armor, toughness, damage, knockback, attackspeed, knockbackres, luck, health, movespeed, unbreakable
+    Attributes: armor:2~4 unbreakable
+
+    # OPTIONAL
+    # Permission required to use / equip the item
+    Perm: equips.tier1
+
+    # OPTIONAL
+    # The maximum durability loss per hit
+    Maxduradamage: 20
+    # OPTIONAL
+    # Whether the item can be fixed with essentials /fix
+    Fixable: true

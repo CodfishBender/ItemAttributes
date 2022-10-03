@@ -1,7 +1,6 @@
 package com.budgienet.itemattributes;
 
-import com.budgienet.itemattributes.configs.MainConfig;
-import org.bukkit.ChatColor;
+import com.budgienet.itemattributes.configs.LangConfig;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -38,12 +37,9 @@ public class WeaponPerms implements Listener {
             String perm = container.get(key, PersistentDataType.STRING);
             if (perm == null) return;
             if (!p.hasPermission(perm)) {
+                p.sendMessage(LangConfig.instance.textNoWepPerms);
                 event.setCancelled(true);
-                String msg = MainConfig.instance.getConfig().getString("WeaponPermissionMessage");
-                if (msg == null) msg = ChatColor.RED + "You cannot use this weapon at your rank.";
-                p.sendMessage(msg);
             }
         }
     }
-
 }

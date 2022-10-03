@@ -1,8 +1,7 @@
 package com.budgienet.itemattributes;
 
-import com.budgienet.itemattributes.configs.MainConfig;
+import com.budgienet.itemattributes.configs.LangConfig;
 import com.jeff_media.armorequipevent.ArmorEquipEvent;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,7 +14,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 public class ArmorPerms implements Listener {
 
-    final ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
+    ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
 
     @EventHandler (priority = EventPriority.HIGH)
     public void onArmorEquip(ArmorEquipEvent event) {
@@ -35,9 +34,7 @@ public class ArmorPerms implements Listener {
             String perm = container.get(key, PersistentDataType.STRING);
             if (perm == null) return;
             if (!p.hasPermission(perm)) {
-                String msg = MainConfig.instance.getConfig().getString("ArmorPermissionMessage");
-                if (msg == null) msg = ChatColor.RED + "You cannot use this armour at your rank.";
-                p.sendMessage(msg);
+                p.sendMessage(LangConfig.instance.textNoArmourPerms);
                 event.setCancelled(true);
             }
         }

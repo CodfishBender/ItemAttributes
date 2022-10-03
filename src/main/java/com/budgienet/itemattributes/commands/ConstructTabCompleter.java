@@ -21,14 +21,26 @@ public class ConstructTabCompleter implements TabCompleter {
 
         // First arg
         if (args.length == 1) {
-            return ia.autoList1;
+            ia.autoList1temp.clear();
+            for (String i : ia.autoList1) {
+                if (i.toLowerCase().contains(args[0].toLowerCase())) {
+                    ia.autoList1temp.add(i);
+                }
+            }
+            return ia.autoList1temp;
         }
         if (Objects.equals(args[0], "giveitem")) {
             if (args.length == 2) {
                 return null;
             }
             if (args.length == 3) {
-                return ItemsConfig.instance.items;
+                ia.autoList2.clear();
+                for (String i : ItemsConfig.instance.items) {
+                    if (i.toLowerCase().contains(args[2].toLowerCase())) {
+                        ia.autoList2.add(i);
+                    }
+                }
+                return ia.autoList2;
             }
         }
         if (Objects.equals(args[0], "give")) {
@@ -128,6 +140,9 @@ public class ConstructTabCompleter implements TabCompleter {
             }
             if ("perm:".contains(args[args.length - 1])) {
                 ia.autoList2.add("perm:");
+            }
+            if ("maxduradamage:".contains(args[args.length - 1])) {
+                ia.autoList2.add("maxduradamage:");
             }
             // Enchants
             for (String s : ia.enchNames) {

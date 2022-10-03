@@ -29,11 +29,10 @@ public class ItemsConfig {
         try {
             config = YamlConfiguration.loadConfiguration(file);
             tempConf = config.getConfigurationSection("items");
-            assert tempConf != null;
             tempKeys = tempConf.getKeys(false);
             items.addAll(tempKeys);
         } catch (Exception ex) {
-            ia.log(Level.SEVERE, "Could not load items.yml.");
+            ia.log(Level.SEVERE, "Could not load items.yml, invalid format.");
         }
 
         if (items.size() > 0) {
@@ -43,26 +42,27 @@ public class ItemsConfig {
         }
     }
     public void setup(File dir) {
-        if (!dir.exists()) dir.mkdirs();
+
+        FileConfiguration config;
         file = new File(dir + File.separator + fileName);
 
+        // Check if file exists
+        if (!dir.exists()) dir.mkdirs();
+
+        // Regenerate missing config
         if (!file.exists()) {
-            ia.log(Level.WARNING, "items.yml is missing, generating a new one.");
-            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-            config.set("items.ExampleItem.Material", "CHAINMAIL_HELMET");
-            config.set("items.ExampleItem.Name", "&fAged_Chainlets");
-            config.set("items.ExampleItem.Lore", "&7&oCommon|&7\"Old_but_reliable.\"");
-            config.set("items.ExampleItem.Enchants", "protection:2 fire_protection:2");
-            config.set("items.ExampleItem.Attributes", "armor:2-4:head movespeed:3:head");
-            config.set("items.ExampleItem.Flags", "hide_enchants hide_dye");
-
-            try {
-                config.save(file);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            ia.log(Level.WARNING, fileName + " is missing, generating a new one.");
+            ia.saveResource(fileName, false);
         }
+
+        config = YamlConfiguration.loadConfiguration(file);
+
+        try {
+            config.save(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         loadValues();
     }
     public FileConfiguration getConfig() {
