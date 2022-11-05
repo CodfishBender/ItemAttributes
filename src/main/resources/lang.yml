@@ -10,3 +10,8 @@ Not_Fixable_All: "&cThere's an unfixable item in your inv: {item}"
 
 No_Weapon_Permission: "&cYou cannot use this weapon at your rank."
 No_Armor_Permission: "&cYou cannot use this armor at your rank."
+
+Repair_Fail: "&cThis item couldn't be repaired."
+Repair_Success: "&aItem repaired."
+
+Player_Not_Found: "&cPlayer not found."

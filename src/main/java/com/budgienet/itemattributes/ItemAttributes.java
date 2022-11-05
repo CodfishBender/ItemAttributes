@@ -19,7 +19,7 @@ import java.util.logging.Level;
 
 public final class ItemAttributes extends JavaPlugin {
 
-    public String basePermission,givePermission,giveItemPermission;
+    public String basePermission,givePermission,giveItemPermission,fixItemPermission, nbtPermission;
     public String[][] attrNames = {{"armor", "GENERIC_ARMOR"},{"toughness", "GENERIC_ARMOR_TOUGHNESS"},{"damage", "GENERIC_ATTACK_DAMAGE"},{"knockback", "GENERIC_ATTACK_KNOCKBACK"},{"attackspeed", "GENERIC_ATTACK_SPEED"},{"knockbackres", "GENERIC_KNOCKBACK_RESISTANCE"},{"luck", "GENERIC_LUCK"},{"health","GENERIC_MAX_HEALTH"},{"movespeed", "GENERIC_MOVEMENT_SPEED"}};
     public List<String> enchNames = new ArrayList<>();
     public List<String> flagNames = new ArrayList<>();
@@ -57,6 +57,8 @@ public final class ItemAttributes extends JavaPlugin {
         basePermission = "itemattributes";
         givePermission = basePermission + ".give";
         giveItemPermission = basePermission + ".giveitem";
+        fixItemPermission = basePermission + ".fixitem";
+        nbtPermission = basePermission + ".addnbt";
         enchNames.clear();
         for (Enchantment e : Enchantment.values()) {
             enchNames.add(e.getKey().getKey());
@@ -72,6 +74,8 @@ public final class ItemAttributes extends JavaPlugin {
         autoList1.add("giveitem");
         autoList1.add("help");
         autoList1.add("reload");
+        autoList1.add("fixitem");
+        autoList1.add("addnbt");
 
         // Plugin support
         if (Bukkit.getPluginManager().isPluginEnabled("AdvancedEnchantments")) {

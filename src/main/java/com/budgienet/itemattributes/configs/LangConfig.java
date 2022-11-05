@@ -10,7 +10,7 @@ import java.util.logging.Level;
 
 public class LangConfig {
 
-    public String textPrefix,textUnknown,textNoPerm,textHelp,textGiveHelp,textNotFixable,textNotFixableAll,textNoArmourPerms,textNoWepPerms;
+    public String textPrefix,textUnknown,textNoPerm,textHelp,textGiveHelp,textNotFixable,textNotFixableAll,textNoArmourPerms,textNoWepPerms,textRepairFail,textRepairSuccess,textPlayerNotFound;
     private final ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
     public static LangConfig instance = new LangConfig();
     final String fileName = "lang.yml";
@@ -47,6 +47,12 @@ public class LangConfig {
         textNoArmourPerms =tryGetString("No_Weapon_Permission", "&cYou cannot use this weapon at your rank.");
 
         textNoWepPerms = tryGetString("No_Armor_Permission", "&cYou cannot use this armor at your rank.");
+
+        textRepairFail = tryGetString("Repair_Fail", "&cThis item couldn't be repaired.");
+
+        textRepairSuccess = tryGetString("Repair_Success", "&aItem repaired.");
+
+        textPlayerNotFound = tryGetString("Player_Not_Found", "&cPlayer not found.");
 
         try {
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -86,6 +92,11 @@ public class LangConfig {
         if (!config.contains(sField)) {
             ia.log(Level.WARNING, "Adding missing " + sField + " to " + fileName);
             config.set(sField, sDefault);
+            try {
+                config.save(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         // Try load value, otherwise use default
         try {

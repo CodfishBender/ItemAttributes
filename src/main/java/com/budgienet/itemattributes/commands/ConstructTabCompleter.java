@@ -43,6 +43,43 @@ public class ConstructTabCompleter implements TabCompleter {
                 return ia.autoList2;
             }
         }
+        if (Objects.equals(args[0], "fixitem")) {
+            if (args.length == 2) {
+                return null;
+            }
+            if (args.length == 3) {
+                List<String> names = new ArrayList<>();
+                Player[] players = new Player[Bukkit.getServer().getOnlinePlayers().size()];
+                Bukkit.getServer().getOnlinePlayers().toArray(players);
+                for (Player player : players) {
+                    if (player.getName().contains(args[args.length - 1])) {
+                        names.add(player.getName());
+                    }
+                }
+                return names;
+            }
+        }
+        if (Objects.equals(args[0], "addnbt")) {
+            List<String> names = new ArrayList<>();
+            if (args.length == 2) {
+                Player[] players = new Player[Bukkit.getServer().getOnlinePlayers().size()];
+                Bukkit.getServer().getOnlinePlayers().toArray(players);
+                for (Player player : players) {
+                    if (player.getName().contains(args[args.length - 1])) {
+                        names.add(player.getName());
+                    }
+                }
+                names.add("help");
+                return names;
+            } else if (args.length == 3){
+                names.add("string");
+                names.add("int");
+                return names;
+            } else if (args.length == 4) {
+                names.add("key:value");
+                return names;
+            }
+        }
         if (Objects.equals(args[0], "give")) {
             // Second arg
             if (args.length == 2) {
@@ -86,6 +123,10 @@ public class ConstructTabCompleter implements TabCompleter {
                         return ia.autoList2;
                     case "perm":
                         ia.autoList2.add(subArgs[0] + ":perm.node");
+                        return ia.autoList2;
+                    case "nbtstring":
+                    case "nbtint":
+                        ia.autoList2.add(subArgs[0] + ":<key>:<value>");
                         return ia.autoList2;
                     default:
                         break;
@@ -134,6 +175,12 @@ public class ConstructTabCompleter implements TabCompleter {
             // Other
             if ("name:".contains(args[args.length - 1])) {
                 ia.autoList2.add("name:");
+            }
+            if ("nbtstring:".contains(args[args.length - 1])) {
+                ia.autoList2.add("nbtstring:");
+            }
+            if ("nbtstring:".contains(args[args.length - 1])) {
+                ia.autoList2.add("nbtint:");
             }
             if ("lore:".contains(args[args.length - 1])) {
                 ia.autoList2.add("lore:");

@@ -3,9 +3,11 @@ package com.budgienet.itemattributes.commands;
 import com.budgienet.itemattributes.ItemAttributes;
 import com.budgienet.itemattributes.configs.ItemsConfig;
 import com.budgienet.itemattributes.configs.LangConfig;
+import com.budgienet.itemattributes.utils.HexEditor;
+import com.budgienet.itemattributes.utils.NBTEditor;
 import net.advancedplugins.ae.api.AEAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
@@ -17,6 +19,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -24,6 +27,8 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class ItemAttributesCommand implements CommandExecutor {
+
+    private enum DataType {eString, eInt}
 
     private ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
     final private LangConfig lang = LangConfig.instance;
@@ -50,6 +55,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         ia.loadPlugin();
                     } catch(Exception e) {
                         player.sendMessage(lang.textPrefix + ChatColor.RED + "An error occured while reloading, please check the console!");
+                        e.printStackTrace();
                         return true;
                     }
                     player.sendMessage(lang.textPrefix + "Reload done!");
@@ -74,6 +80,27 @@ public class ItemAttributesCommand implements CommandExecutor {
                     }
                     giveItem(args, player);
                     return true;
+                } else if (args[0].equals("fixitem")) {
+                    if (!player.hasPermission(ia.fixItemPermission)) {
+                        player.sendMessage(lang.textNoPerm);
+                        return true;
+                    }
+                    repairItem(args[1], sender);
+                    return true;
+                } else if (args[0].equals("addnbt")) {
+                    if (!player.hasPermission(ia.nbtPermission)) {
+                        player.sendMessage(lang.textNoPerm);
+                        return true;
+                    }
+                    if (args[2].equals("string")) {
+                        addNBTdata(args, sender, DataType.eString);
+                        return true;
+                    } else if (args[2].equals("int")) {
+                        addNBTdata(args, sender, DataType.eInt);
+                        return true;
+                    }
+                    player.sendMessage(lang.textPrefix + ChatColor.RED + "Invalid data type: " + args[2]);
+                    return true;
                 }
             }
             // Catch unknown arg
@@ -84,18 +111,41 @@ public class ItemAttributesCommand implements CommandExecutor {
                 if (args[0].equals("help")) {
                     showHelpConsole();
                     return true;
+                } else if (args[0].equals("reload")) {
+                    ia.log(Level.INFO,"Reloading plugin...");
+                    try {
+                        ia.loadPlugin();
+                    } catch(Exception e) {
+                        ia.log(Level.INFO, lang.textPrefix + e);
+                        e.printStackTrace();
+                        return true;
+                    }
+                    ia.log(Level.INFO, "Reload done!");
+                    return true;
                 }
             } else {
                 if (args[0].equals("give")) {
                     if (args[1].equals("help")) {
-                        Bukkit.getServer().getConsoleSender().sendMessage(lang.textGiveHelp);
+                        ia.log(Level.INFO, lang.textGiveHelp);
                         return true;
                     }
                     give(args, null);
                     return true;
-                }
-                if (args[0].equals("giveitem")) {
+                } else if (args[0].equals("giveitem")) {
                     giveItem(args, null);
+                    return true;
+                } else if (args[0].equals("fixitem")) {
+                    repairItem(args[1], null);
+                    return true;
+                } else if (args[0].equals("addnbt")) {
+                    if (args[1].equals("string")) {
+                        addNBTdata(args, sender, DataType.eString);
+                        return true;
+                    } else if (args[1].equals("int")) {
+                        addNBTdata(args, sender, DataType.eInt);
+                        return true;
+                    }
+                    ia.log(Level.WARNING, "Invalid data type: " + args[2]);
                     return true;
                 }
             }
@@ -105,6 +155,33 @@ public class ItemAttributesCommand implements CommandExecutor {
         return true;
     }
 
+    private void repairItem(final String name, CommandSender sender) {
+
+        Player target = Bukkit.getPlayer(name);
+
+        if (target != null) {
+            ItemStack handItemStack = target.getInventory().getItemInMainHand();
+
+            if (handItemStack.hasItemMeta()) {
+                Damageable itemMeta = (Damageable) handItemStack.getItemMeta();
+
+                if (itemMeta != null) {
+                    itemMeta.setDamage(0);
+                    handItemStack.setItemMeta(itemMeta);
+                    if (sender != null) sender.sendMessage(lang.textRepairSuccess);
+                    ia.log(Level.INFO, "Item repaired for " + name);
+                    return;
+                }
+            }
+        } else {
+            if (sender != null) sender.sendMessage(lang.textPlayerNotFound + " (" + name + ")");
+            ia.log(Level.WARNING, "itemfix player not found: " + name);
+            return;
+        }
+        if (sender != null) sender.sendMessage(lang.textRepairFail);
+        ia.log(Level.WARNING, "Item repair failed for " + target.getName());
+    }
+
     private void showHelp(final Player player) {
         player.sendMessage(lang.textHelp);
     }
@@ -112,6 +189,66 @@ public class ItemAttributesCommand implements CommandExecutor {
     private void showHelpConsole() {
         Bukkit.getServer().getConsoleSender().sendMessage(lang.textHelp);
     }
+
+    private void addNBTdata(final String[] args, CommandSender sender, DataType type) {
+
+        // 0 = addnbt, 1 = Player, 2 = key:value
+
+        if (args.length < 3) {
+            String msg = "Not enough arguments!";
+            if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+            ia.log(Level.INFO, msg);
+            return;
+        }
+
+        // Get player
+        Player targetPlayer = Bukkit.getPlayer(args[1]);
+        if (targetPlayer == null) {
+            String msg = "Cannot find player: " + args[1];
+            ia.log(Level.SEVERE, msg);
+            if (sender != null) { sender.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+            return;
+        }
+
+        // Get item in player hand
+        if (targetPlayer.getInventory().getItemInMainHand().getType() == Material.AIR) {
+            String msg = "Cannot apply nbt, " + targetPlayer.getName() + " is not holding an item!";
+            if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+            ia.log(Level.INFO, msg);
+            return;
+        }
+
+        ItemStack itemStack = targetPlayer.getInventory().getItemInMainHand();
+
+        String[] subArgs = args[3].split(":", -1);   // Define array of sub arguments
+        ItemStack newItem = null;
+
+        if (subArgs.length == 2) {
+            if (type == DataType.eInt) {
+                try {
+                    newItem = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), subArgs[0]);
+                } catch (Exception e) {
+                    String msg = "Invalid argument - not a number: " + args[3];
+                    if (sender != null) {
+                        sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                    } else {
+                        ia.log(Level.INFO, msg);
+                    }
+                }
+            } else {
+                newItem = NBTEditor.set(itemStack, subArgs[1], subArgs[0]);
+            }
+            targetPlayer.getInventory().setItem(EquipmentSlot.HAND, newItem);
+        } else {
+            String msg = "Invalid arguments: " + args[3];
+            if (sender != null) {
+                sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+            } else {
+                ia.log(Level.INFO, msg);
+            }
+        }
+    }
+
     private void giveItem(final String[] args, Player player) {
 
         ia = ItemAttributes.getPlugin(ItemAttributes.class);
@@ -159,10 +296,19 @@ public class ItemAttributesCommand implements CommandExecutor {
                     newArg.add("perm:" + perm); // Arg[3+] >> Lore
                 }
 
+                // Fixable
+                String fixable = config.getString("items." + item + ".Fixable");   // Get current argument
+                if (fixable != null) {
+                    newArg.add("fixable:" + fixable); // Arg[3+]
+                }
+
+                // Item ID
+                newArg.add("itemid:" + item); // Arg[3+]
+
                 // Maxduradamage
                 String maxduradmg = config.getString("items." + item + ".MaxDuraDamage");   // Get current argument
                 if (maxduradmg != null) {
-                    newArg.add("perm:" + maxduradmg); // Arg[3+] >> Lore
+                    newArg.add("perm:" + maxduradmg); // Arg[3+]
                 }
 
                 // Enchantments
@@ -189,11 +335,30 @@ public class ItemAttributesCommand implements CommandExecutor {
                     }
                 } catch(NullPointerException ignored) {}
 
+                // NBT data
+                try {
+                    String[] nbtstring = config.getString("items." + item + ".Tags").split(" ");   // Get data
+                    if (nbtstring.length > 0) {
+                        for (String i:nbtstring) {
+                            newArg.add("nbtstring:" + i);
+                        }
+                    }
+                } catch(NullPointerException ignored) {}
+                try {
+                    String[] nbtint = config.getString("items." + item + ".TagsInt").split(" ");   // Get data
+                    if (nbtint.length > 0) {
+                        for (String i:nbtint) {
+                            newArg.add("nbtint:" + i);
+                        }
+                    }
+                } catch(NullPointerException ignored) {}
+
                 // Parse values as a command for give()
                 give(newArg.toArray(new String[0]), player);
             }
         }
     }
+
     private void give(final String[] args, Player player) {
 
         // 0 = give, 1 = Player, 2 = Item, 3+ = name/lore/unbreaking/attributes/enchants
@@ -214,7 +379,42 @@ public class ItemAttributesCommand implements CommandExecutor {
             if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
             return;
         }
+
+        // Get item stack
         ItemStack itemStack = new ItemStack(mat);
+
+        // Custom NBT Tags
+        for (int i = 3; i < args.length; i++) {
+
+            String arg = args[i];   // Get current argument
+            String[] subArgs = arg.split(":", -1);   // Define array of sub arguments
+
+            if (arg.toLowerCase().contains("nbtstring:")) {
+                if (subArgs.length == 3) {
+                    itemStack = NBTEditor.set(itemStack, subArgs[2], subArgs[1]);
+                } else {
+                    String msg = "Invalid nbt arguments: " + arg;
+                    player.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                    return;
+                }
+            } else if (arg.toLowerCase().contains("nbtint:")) {
+                if (subArgs.length == 3) {
+                    try {
+                        itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[2]), subArgs[1]);
+                    } catch(Exception e) {
+                        String msg = "Invalid nbt integer: " + arg + ". Value must be an integer.";
+                        player.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                        return;
+                    }
+                } else {
+                    String msg = "Invalid nbt arguments: " + arg;
+                    player.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                    return;
+                }
+            }
+        }
+
+        // Grab meta data after assigning nbt tags
         ItemMeta meta = itemStack.getItemMeta();
         assert meta != null;
 
@@ -226,12 +426,21 @@ public class ItemAttributesCommand implements CommandExecutor {
             String arg = args[i];   // Get current argument
             String[] subArgs = arg.split(":", -1);   // Define array of sub arguments
 
+            // Skip AE Items
+            if (ia.aeSupport) {
+                if (AEAPI.getAllEnchantments().contains(subArgs[0])) { continue; }
+            }
+
+            // Skip nbt arg
+            if (arg.toLowerCase().contains("nbtstring:") || arg.toLowerCase().contains("nbtint:")) { continue; }
+
             // Check if sub arguments are provided
             if (subArgs.length >= 2) {
                 // Set item name
                 if (arg.toLowerCase().contains("name:")) {
                     // Set the items name
-                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', arg.replace("name:", "").replace("_", " ")));
+                    String name = HexEditor.translateHexColorCodes("&#","",arg.replace("name:", "").replace("_", " "));
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
                     continue;
                 }
                 // Set item lore
@@ -264,7 +473,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             }
 
 
-            // Permission
+            // Set Permission tag
             // Set perm as persistent data container
             if (arg.toLowerCase().contains("perm:")) {
                 NamespacedKey key = new NamespacedKey(ia, "required-perm");
@@ -272,8 +481,23 @@ public class ItemAttributesCommand implements CommandExecutor {
                 continue;
             }
 
+            // Set Fixable tag
+            // Set perm as persistent data container
+            if (arg.toLowerCase().contains("fixable:")) {
+                String input = arg.replace("fixable:", "");
+                if (!input.equals("true") && !input.equals("false")) {
+                    String msg = "Fixable must be true or false: " + arg;
+                    ia.log(Level.SEVERE, msg);
+                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                    return;
+                }
+                NamespacedKey key = new NamespacedKey(ia, "fixable");
+                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, input);
+                continue;
+            }
 
-            // Max Dura
+
+            // Set Max Dura
             // Set the maximum durability loss from a single hit
             if (arg.toLowerCase().contains("maxduradamage:")) {
                 try {
@@ -291,7 +515,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             }
 
 
-            // Enchantments
+            // Set Enchantments
             // Attempt to find the Enchant enum
             Enchantment enchant = Enchantment.getByKey(NamespacedKey.fromString(subArgs[0].toLowerCase()));
             // Enchant was found
@@ -314,7 +538,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 }
             }
 
-            // Attributes
+            // Set Attributes
             org.bukkit.attribute.Attribute attribute = null;  // Instantiate attribute
 
             // Attempt to find the Attribute enum
@@ -418,8 +642,14 @@ public class ItemAttributesCommand implements CommandExecutor {
                 continue;
             }
 
-            // AE Support
-            if (AEAPI.getAllEnchantments().contains(subArgs[0])) continue;
+            // Set item ID
+            // Set ID as persistent data container
+            if (arg.toLowerCase().contains("itemid:")) {
+                String input = arg.replace("itemid:", "");
+                NamespacedKey key = new NamespacedKey(ia, "itemID");
+                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, input);
+                continue;
+            }
 
             // Catch all non-recognized arguments
             String msg ="Unknown argument: " + arg;
@@ -440,9 +670,11 @@ public class ItemAttributesCommand implements CommandExecutor {
                 if (AEAPI.isAnEnchantment(ea)) {
                     try {
                         AEAPI.applyEnchant(ea, Integer.parseInt(subArgs[1]), itemStack);
+                        itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), "ae_enchantment;" + subArgs[0]);
                     }
                     catch (ArrayIndexOutOfBoundsException ex) {
                         AEAPI.applyEnchant(ea, 1, itemStack);
+                        itemStack = NBTEditor.set(itemStack, 1, "ae_enchantment;" + subArgs[0]);
                     }
                     catch (NumberFormatException ex) {
                         String msg = "Not a number: " + args[i];
@@ -458,9 +690,8 @@ public class ItemAttributesCommand implements CommandExecutor {
         String totalModifiers = (meta.getAttributeModifiers() == null) ? "" : " Attributes:" + meta.getAttributeModifiers().size();
         String totalEnchantments = (itemStack.getEnchantments().size() == 0) ? "" : " Enchants:" + itemStack.getEnchantments().size();
         String itemName = (meta.hasDisplayName()) ? meta.getDisplayName() + ChatColor.GOLD + " (" + itemStack.getType().name() + ")" : itemStack.getType().name();
-        String aeEnchants = (AEAPI.getEnchantmentsOnItem(itemStack).size() == 0) ? "" : " AE:" + AEAPI.getEnchantmentsOnItem(itemStack).size();
 
-        String msg = "Gave " + targetPlayer.getName() + ": " + itemName + totalEnchantments + totalModifiers + aeEnchants;
+        String msg = "Gave " + targetPlayer.getName() + ": " + itemName + totalEnchantments + totalModifiers;
         ia.log(Level.INFO, msg);
 
         // Send player message
@@ -477,7 +708,11 @@ public class ItemAttributesCommand implements CommandExecutor {
             // Send item to player inventory
             targetPlayer.getInventory().addItem(itemStack);
             // Send message to recipient
-            targetPlayer.sendMessage(ChatColor.YELLOW + "You've recieved: " + meta.getDisplayName());
+            if (meta.hasDisplayName()) {
+                targetPlayer.sendMessage(ChatColor.YELLOW + "You've recieved a " + meta.getDisplayName());
+            } else {
+                targetPlayer.sendMessage(ChatColor.YELLOW + "You've recieved a " + itemStack.getType().toString().replace("_", " ").toLowerCase());
+            }
         }
 
     } // End Method

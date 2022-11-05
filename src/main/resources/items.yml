@@ -1,32 +1,31 @@
 items:
   ExampleItem:
-    # REQUIRED
-    # Materials can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+    # (REQUIRED) Materials can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
     Material: IRON_BOOTS
 
-    # OPTIONAL
-    # The display name on the item
+    # (Optional) The display name on the item. Supports 6 char hex, e.g. &#fb7100
     Name: '&7&oAged Boots'
 
-    # OPTIONAL
-    # Multiple lines must be separated using |
+    # (Optional) Multiple lines must be separated using |
     Lore: '&7Made of steel.|&7Old but reliable.'
 
-    # OPTIONAL
-    # Supports any vanilla enchant or AdvancedEnchantments
+    # (Optional) Supports any vanilla enchant or AdvancedEnchantments
     Enchants: protection:1 unbreaking:1
 
-    # OPTIONAL
-    # Possible attributes: armor, toughness, damage, knockback, attackspeed, knockbackres, luck, health, movespeed, unbreakable
+    # (Optional) Possible attributes: armor, toughness, damage, knockback, attackspeed, knockbackres, luck, health, movespeed, unbreakable
     Attributes: armor:2~4 unbreakable
 
-    # OPTIONAL
-    # Permission required to use / equip the item
+    # (Optional) Permission required to use / equip the item
     Perm: equips.tier1
 
-    # OPTIONAL
-    # The maximum durability loss per hit
+    # (Optional) The maximum durability loss per hit
     Maxduradamage: 20
-    # OPTIONAL
-    # Whether the item can be fixed with essentials /fix
-    Fixable: true
+
+    # (Optional) Whether the item can be fixed with essentials /fix
+    Fixable: false
+
+    # (Optional) Add any **string** NBT tags onto the item <key>:<value>. Values will be handled as strings.
+    Tags: armorSet:Void
+
+    # (Optional) Add any **int** NBT tags onto the item <key>:<value>. Values will be handled as integers.
+    TagsInt: ae_enchantment:1
