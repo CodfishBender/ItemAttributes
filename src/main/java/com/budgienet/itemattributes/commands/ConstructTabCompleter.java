@@ -16,118 +16,140 @@ import java.util.Objects;
 public class ConstructTabCompleter implements TabCompleter {
 
     private final ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
+
+    List<String> GetPlayerList(String[] args) {
+        List<String> names = new ArrayList<>();
+
+        Player[] players = new Player[Bukkit.getServer().getOnlinePlayers().size()];
+        for (Player player : Bukkit.getServer().getOnlinePlayers().toArray(players)) {
+            if (player.getName().toLowerCase().contains(args[args.length - 1])) {
+                names.add(player.getName());
+            }
+        }
+        return names;
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
 
-        // First arg
+        // Clear autocomplete list
+        ia.autoList.clear();
+        String lastArg = args[args.length - 1].toLowerCase();
+
+        // Make all args lowercase
+        for (int i = 0; i < args.length; i++) {
+            args[i] = args[i].toLowerCase();
+        }
+
         if (args.length == 1) {
-            ia.autoList1temp.clear();
             for (String i : ia.autoList1) {
-                if (i.toLowerCase().contains(args[0].toLowerCase())) {
-                    ia.autoList1temp.add(i);
+                if (i.toLowerCase().contains(args[0])) {
+                    ia.autoList.add(i);
                 }
             }
-            return ia.autoList1temp;
+            return ia.autoList;
         }
-        if (Objects.equals(args[0], "giveitem")) {
+        else if (Objects.equals(args[0].toLowerCase(), "giveitem")) {
             if (args.length == 2) {
                 return null;
             }
-            if (args.length == 3) {
-                ia.autoList2.clear();
+            else if (args.length == 3) {
                 for (String i : ItemsConfig.instance.items) {
                     if (i.toLowerCase().contains(args[2].toLowerCase())) {
-                        ia.autoList2.add(i);
+                        ia.autoList.add(i);
                     }
                 }
-                return ia.autoList2;
+                return ia.autoList;
             }
         }
-        if (Objects.equals(args[0], "fixitem")) {
+        else if (Objects.equals(args[0].toLowerCase(), "addenchant")) {
             if (args.length == 2) {
-                return null;
+                return GetPlayerList(args);
             }
-            if (args.length == 3) {
-                List<String> names = new ArrayList<>();
-                Player[] players = new Player[Bukkit.getServer().getOnlinePlayers().size()];
-                Bukkit.getServer().getOnlinePlayers().toArray(players);
-                for (Player player : players) {
-                    if (player.getName().contains(args[args.length - 1])) {
-                        names.add(player.getName());
+            else if (args.length == 3) {
+                /*
+                for (String i:ia.enchNames) {
+                    if (i.toLowerCase().contains(lastArg)) ia.autoList.add(i);
+                }
+                for (String i:ia.flagNames) {
+                    if (i.toLowerCase().contains(lastArg)) ia.autoList.add(i);
+                }
+                for (String[] i:ia.attrNames) {
+                    if (i[0].toLowerCase().contains(lastArg)) ia.autoList.add(i[0]);
+                }
+                */
+                 if (ia.aeSupport) {
+                    for (String i:AEAPI.getAllEnchantments()) {
+                        if (i.toLowerCase().contains(lastArg)) ia.autoList.add(i);
                     }
                 }
-                return names;
             }
+            String[] subArgs = lastArg.split(":", -1);
+            if (subArgs.length > 1) {
+                ia.autoList.clear();
+                ia.autoList.add(subArgs[0] + ":<number>");
+                return ia.autoList;
+            }
+            return ia.autoList;
         }
-        if (Objects.equals(args[0], "addnbt")) {
-            List<String> names = new ArrayList<>();
+        else if (Objects.equals(args[0].toLowerCase(), "fixitem")) {
             if (args.length == 2) {
-                Player[] players = new Player[Bukkit.getServer().getOnlinePlayers().size()];
-                Bukkit.getServer().getOnlinePlayers().toArray(players);
-                for (Player player : players) {
-                    if (player.getName().contains(args[args.length - 1])) {
-                        names.add(player.getName());
-                    }
-                }
-                names.add("help");
-                return names;
+                return GetPlayerList(args);
+            }
+            return ia.autoList;
+        }
+        else if (Objects.equals(args[0].toLowerCase(), "addnbt")) {
+            if (args.length == 2) {
+                return GetPlayerList(args);
             } else if (args.length == 3){
-                names.add("string");
-                names.add("int");
-                return names;
+                ia.autoList.add("string");
+                ia.autoList.add("int");
+                return ia.autoList;
             } else if (args.length == 4) {
-                names.add("key:value");
-                return names;
+                ia.autoList.add("key:value");
+                return ia.autoList;
             }
+            return ia.autoList;
         }
-        if (Objects.equals(args[0], "give")) {
-            // Second arg
+        else if (Objects.equals(args[0].toLowerCase(), "give")) {
+            // Second arg - Players
             if (args.length == 2) {
-                List<String> names = new ArrayList<>();
-                Player[] players = new Player[Bukkit.getServer().getOnlinePlayers().size()];
-                Bukkit.getServer().getOnlinePlayers().toArray(players);
-                for (Player player : players) {
-                    if (player.getName().contains(args[args.length - 1])) {
-                        names.add(player.getName());
-                    }
-                }
-                names.add("help");
-                return names;
+                ia.autoList.addAll(GetPlayerList(args));
+                ia.autoList.add("help");
+                return ia.autoList;
             }
-            // Third arg
+            // Third arg - Materials
             if (args.length == 3) {
-                ia.materialNames.clear();
                 for (Material mat : Material.values()) {
                     String name = mat.name().toLowerCase();
-                    if (name.contains(args[args.length - 1])) {
-                        ia.materialNames.add(mat.name().toLowerCase());
+                    if (name.contains(lastArg)) {
+                        ia.autoList.add(mat.name().toLowerCase());
                     }
                 }
-                return ia.materialNames;
+                return ia.autoList;
             }
-            // Fourth+ arg
-            ia.autoList2.clear();
-            String[] subArgs = args[args.length - 1].split(":", -1);
+            // Fourth+ arg - Enchants/Attributes
+            String[] subArgs = lastArg.split(":", -1);
             if (subArgs.length == 1) {
-                if (args[args.length - 1].contains(":")) {
-                    ia.autoList2.add(subArgs[0] + ":<number>");
-                    return ia.autoList2;
+                if (lastArg.contains(":")) {
+                    ia.autoList.add(subArgs[0] + ":<number>");
+                    return ia.autoList;
                 }
             } else if (subArgs.length == 2) {
                 switch (subArgs[0]) {
                     case "name":
-                        ia.autoList2.add(subArgs[0] + ":&a&lExample_name");
-                        return ia.autoList2;
+                        ia.autoList.add(subArgs[0] + ":&a&lExample_name");
+                        return ia.autoList;
                     case "lore":
-                        ia.autoList2.add(subArgs[0] + ":&cExample_lore|&7New_line");
-                        return ia.autoList2;
+                        ia.autoList.add(subArgs[0] + ":&cExample_lore|&7New_line");
+                        return ia.autoList;
                     case "perm":
-                        ia.autoList2.add(subArgs[0] + ":perm.node");
-                        return ia.autoList2;
+                        ia.autoList.add(subArgs[0] + ":perm.node");
+                        return ia.autoList;
                     case "nbtstring":
                     case "nbtint":
-                        ia.autoList2.add(subArgs[0] + ":<key>:<value>");
-                        return ia.autoList2;
+                        ia.autoList.add(subArgs[0] + ":<key>:<value>");
+                        return ia.autoList;
                     default:
                         break;
                 }
@@ -142,12 +164,12 @@ public class ConstructTabCompleter implements TabCompleter {
                         case "attackspeed":
                         case "knockbackres":
                         case "luck":
-                            ia.autoList2.add(subArgs[0] + ":1~2");
-                            return ia.autoList2;
+                            ia.autoList.add(subArgs[0] + ":1~2");
+                            return ia.autoList;
                     }
                 }
-                ia.autoList2.add(subArgs[0] + ":1");
-                return ia.autoList2;
+                ia.autoList.add(subArgs[0] + ":1");
+                return ia.autoList;
             } else if (subArgs.length == 3) {
                 switch (subArgs[0]) {
                     case "armor":
@@ -161,68 +183,57 @@ public class ConstructTabCompleter implements TabCompleter {
                     case "luck":
                         break;
                     default:
-                        ia.autoList2.add(subArgs[0] + ":" + subArgs[1]);
-                        return ia.autoList2;
+                        ia.autoList.add(subArgs[0] + ":" + subArgs[1]);
+                        return ia.autoList;
                 }
-                ia.autoList2.add(subArgs[0] + ":" + subArgs[1] + ":head");
-                ia.autoList2.add(subArgs[0] + ":" + subArgs[1] + ":chest");
-                ia.autoList2.add(subArgs[0] + ":" + subArgs[1] + ":legs");
-                ia.autoList2.add(subArgs[0] + ":" + subArgs[1] + ":feet");
-                ia.autoList2.add(subArgs[0] + ":" + subArgs[1] + ":hand");
-                ia.autoList2.add(subArgs[0] + ":" + subArgs[1] + ":offhand");
-                return ia.autoList2;
+                ia.autoList.add(subArgs[0] + ":" + subArgs[1] + ":head");
+                ia.autoList.add(subArgs[0] + ":" + subArgs[1] + ":chest");
+                ia.autoList.add(subArgs[0] + ":" + subArgs[1] + ":legs");
+                ia.autoList.add(subArgs[0] + ":" + subArgs[1] + ":feet");
+                ia.autoList.add(subArgs[0] + ":" + subArgs[1] + ":hand");
+                ia.autoList.add(subArgs[0] + ":" + subArgs[1] + ":offhand");
+                return ia.autoList;
             }
             // Other
-            if ("name:".contains(args[args.length - 1])) {
-                ia.autoList2.add("name:");
+            if ("name:".contains(lastArg)) {
+                ia.autoList.add("name:");
             }
-            if ("nbtstring:".contains(args[args.length - 1])) {
-                ia.autoList2.add("nbtstring:");
+            if ("nbtstring:".contains(lastArg)) {
+                ia.autoList.add("nbtstring:");
             }
-            if ("nbtstring:".contains(args[args.length - 1])) {
-                ia.autoList2.add("nbtint:");
+            if ("nbtstring:".contains(lastArg)) {
+                ia.autoList.add("nbtint:");
             }
-            if ("lore:".contains(args[args.length - 1])) {
-                ia.autoList2.add("lore:");
+            if ("lore:".contains(lastArg)) {
+                ia.autoList.add("lore:");
             }
-            if ("perm:".contains(args[args.length - 1])) {
-                ia.autoList2.add("perm:");
+            if ("perm:".contains(lastArg)) {
+                ia.autoList.add("perm:");
             }
-            if ("maxduradamage:".contains(args[args.length - 1])) {
-                ia.autoList2.add("maxduradamage:");
+            if ("maxduradamage:".contains(lastArg)) {
+                ia.autoList.add("maxduradamage:");
             }
             // Enchants
             for (String s : ia.enchNames) {
-                if (s.contains(args[args.length - 1])) {
-                    ia.autoList2.add(s);
-                }
-            }
-            // Attributes
-            for (String s : ia.enchNames) {
-                if (s.contains(args[args.length - 1])) {
-                    ia.autoList2.add(s);
-                }
-            }
-            for (int i = 0; i < ia.attrNames.length; i++) {
-                if (ia.attrNames[i][0].contains(args[args.length - 1])) {
-                    ia.autoList2.add(ia.attrNames[i][0]);
-                }
+                if (s.toLowerCase().contains(lastArg)) ia.autoList.add(s);
             }
             // Flags
             for (String s : ia.flagNames) {
-                if (s.contains(args[args.length - 1])) {
-                    ia.autoList2.add(s);
-                }
+                if (s.toLowerCase().contains(lastArg)) ia.autoList.add(s);
+            }
+            // Attributes
+            for (String[] att:ia.attrNames) {
+                if (att[0].toLowerCase().contains(lastArg)) ia.autoList.add(att[0]);
             }
             // AE Support
             if (ia.aeSupport) {
                 for (String s : AEAPI.getAllEnchantments()) {
-                    if (s.contains(args[args.length - 1])) {
-                        ia.autoList2.add(s);
+                    if (s.contains(lastArg)) {
+                        ia.autoList.add(s);
                     }
                 }
             }
-            return ia.autoList2;
+            return ia.autoList;
         }
 
         // Catch unknown args

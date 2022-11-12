@@ -19,14 +19,12 @@ import java.util.logging.Level;
 
 public final class ItemAttributes extends JavaPlugin {
 
-    public String basePermission,givePermission,giveItemPermission,fixItemPermission, nbtPermission;
+    public String basePerm,givePerm,giveItemPerm,fixItemPerm,nbtPerm,addEnchPerm;
     public String[][] attrNames = {{"armor", "GENERIC_ARMOR"},{"toughness", "GENERIC_ARMOR_TOUGHNESS"},{"damage", "GENERIC_ATTACK_DAMAGE"},{"knockback", "GENERIC_ATTACK_KNOCKBACK"},{"attackspeed", "GENERIC_ATTACK_SPEED"},{"knockbackres", "GENERIC_KNOCKBACK_RESISTANCE"},{"luck", "GENERIC_LUCK"},{"health","GENERIC_MAX_HEALTH"},{"movespeed", "GENERIC_MOVEMENT_SPEED"}};
     public List<String> enchNames = new ArrayList<>();
     public List<String> flagNames = new ArrayList<>();
     public List<String> autoList1 = new ArrayList<>();
-    public List<String> autoList1temp = new ArrayList<>();
-    public List<String> autoList2 = new ArrayList<>();
-    public List<String> materialNames = new ArrayList<>(Material.values().length);
+    public List<String> autoList = new ArrayList<>();
     public boolean aeSupport = false;
 
     @Override
@@ -54,11 +52,12 @@ public final class ItemAttributes extends JavaPlugin {
         LangConfig.instance.setup(getDataFolder());
 
         // Build variables
-        basePermission = "itemattributes";
-        givePermission = basePermission + ".give";
-        giveItemPermission = basePermission + ".giveitem";
-        fixItemPermission = basePermission + ".fixitem";
-        nbtPermission = basePermission + ".addnbt";
+        basePerm = "itemattributes";
+        givePerm = basePerm + ".give";
+        giveItemPerm = basePerm + ".giveitem";
+        fixItemPerm = basePerm + ".fixitem";
+        nbtPerm = basePerm + ".addnbt";
+        addEnchPerm = basePerm + ".addenchant";
         enchNames.clear();
         for (Enchantment e : Enchantment.values()) {
             enchNames.add(e.getKey().getKey());
@@ -76,6 +75,7 @@ public final class ItemAttributes extends JavaPlugin {
         autoList1.add("reload");
         autoList1.add("fixitem");
         autoList1.add("addnbt");
+        autoList1.add("addenchant");
 
         // Plugin support
         if (Bukkit.getPluginManager().isPluginEnabled("AdvancedEnchantments")) {

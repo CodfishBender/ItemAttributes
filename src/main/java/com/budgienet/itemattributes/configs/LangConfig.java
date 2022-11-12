@@ -10,29 +10,13 @@ import java.util.logging.Level;
 
 public class LangConfig {
 
-    public String textPrefix,textUnknown,textNoPerm,textHelp,textGiveHelp,textNotFixable,textNotFixableAll,textNoArmourPerms,textNoWepPerms,textRepairFail,textRepairSuccess,textPlayerNotFound;
+    public String textPrefix,textUnknown,textNoPerm,textHelp,textGiveHelp,textNotFixable,textNotFixableAll,textNoArmourPerms,textNoWepPerms,textRepairFail,textRepairSuccess,textPlayerNotFound,textMissingArg;
     private final ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
     public static LangConfig instance = new LangConfig();
     final String fileName = "lang.yml";
     private File file;
 
     public void loadValues() {
-        // Load values
-        textHelp = textPrefix + "§2Running §aItemAttributes §2v" + ia.getDescription().getVersion() +" by Eroserv" +
-                "\n§7> §a/itema§f - Command alias" +
-                "\n§7> §a/item help§f - Shows this help section" +
-                "\n§7> §a/itema giveitem <player> <item>§f - Give an item from items.yml" +
-                "\n§7> §a/itema give <player> <material> ...§f - use §2/itema give help §ffor more info";
-        textGiveHelp = "§7> §a/itema give <player> <material> §2... (optional)" +
-                "\n§a     name:<item-name>§f - Item name, _ for spaces" +
-                "\n§a     lore:<item-lore>§f - Item lore, | for newline" +
-                "\n§a     <enchant>:<number>§f - Vanilla or AE enchant" +
-                "\n§a     <attribute>:<number>:<slot>§f - Vanilla item attribute" +
-                "\n§a     <flag>§f - Vanilla item flag" +
-                "\n§a     <perm>§f - Weapon/armor restricted to perm node" +
-                "\n§f     <number> can be a random range, e.g. smite:1~5." +
-                "\n§f     Leave <slot> blank to use default slot.";
-
         // Set variables & regen missing items
         textPrefix = tryGetString("Chat_Prefix", "&7[&aIA&7] &7");
 
@@ -44,7 +28,7 @@ public class LangConfig {
 
         textNotFixableAll = tryGetString("Not_Fixable_All", "&cThere's an unfixable item in your inv.");
 
-        textNoArmourPerms =tryGetString("No_Weapon_Permission", "&cYou cannot use this weapon at your rank.");
+        textNoArmourPerms = tryGetString("No_Weapon_Permission", "&cYou cannot use this weapon at your rank.");
 
         textNoWepPerms = tryGetString("No_Armor_Permission", "&cYou cannot use this armor at your rank.");
 
@@ -53,6 +37,26 @@ public class LangConfig {
         textRepairSuccess = tryGetString("Repair_Success", "&aItem repaired.");
 
         textPlayerNotFound = tryGetString("Player_Not_Found", "&cPlayer not found.");
+
+        textMissingArg = tryGetString("Missing_Arg", "&cMissing argument.");
+
+        textHelp = textPrefix + "§7ItemAttributes v" + ia.getDescription().getVersion() +" by Eroserv" +
+                "\n§7> §a/itema§7 - Command alias" +
+                "\n§7> §a/itema reload§7 - Reload the plugin and items" +
+                "\n§7> §a/itema help§7 - Shows this help section" +
+                "\n§7> §a/itema addnbt§7 - Add an nbt property to a held item" +
+                "\n§7> §a/itema fixitem§7 - Repair a held item" +
+                "\n§7> §a/itema giveitem <player> <item>§7 - Give an item from items.yml" +
+                "\n§7> §a/itema give <player> <material> ...§7 - See §2/itema give help";
+        textGiveHelp = "§7> §a/itema give <player> <material> §2... (optional)" +
+                "\n§a     name:<name>§7 - Items name, _ for spaces" +
+                "\n§a     lore:<lore>§7 - Items lore, | for newline" +
+                "\n§a     <enchant>:<number>§7 - Vanilla or AE enchant" +
+                "\n§a     <attribute>:<number>:<slot>§7 - Vanilla item attribute" +
+                "\n§a     <flag>§7 - Vanilla item flag" +
+                "\n§a     <perm>§7 - Weapon/armor restricted to perm node" +
+                "\n§7     <number> can be a random range, e.g. smite:1~5." +
+                "\n§7     Leave <slot> blank to use default slot.";
 
         try {
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);

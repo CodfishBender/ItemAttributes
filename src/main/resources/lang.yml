@@ -4,7 +4,7 @@ Chat_Prefix: "&7[&aIA&7] &7"
 Unknown_Command: "&cUnknown command."
 No_Permission: "&cNo permission."
 
-# Use {item} for the items name
+# Use {item} for the item name
 Not_Fixable: "&cThis item cannot be fixed with /fix."
 Not_Fixable_All: "&cThere's an unfixable item in your inv: {item}"
 
@@ -15,3 +15,4 @@ Repair_Fail: "&cThis item couldn't be repaired."
 Repair_Success: "&aItem repaired."
 
 Player_Not_Found: "&cPlayer not found."
+Missing_Arg: "&cMissing argument."

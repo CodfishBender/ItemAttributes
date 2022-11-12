@@ -13,6 +13,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
@@ -28,136 +29,192 @@ import java.util.logging.Level;
 
 public class ItemAttributesCommand implements CommandExecutor {
 
-    private enum DataType {eString, eInt}
-
+    public enum DataType {eString, eInt}
     private ItemAttributes ia = ItemAttributes.getPlugin(ItemAttributes.class);
     final private LangConfig lang = LangConfig.instance;
 
     public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String label, String[] args) {
 
         // Handle player command and console command separately
-        if ((sender instanceof Player)) {
-            final Player player = (Player) sender;
-            // Permission checking
-            if (!player.hasPermission(ia.basePermission)) {
-                player.sendMessage(lang.textNoPerm);
+        if (sender instanceof ConsoleCommandSender) {
+            // Console commands
+            if (args.length == 0) {
+                ia.log(Level.WARNING, "Missing argument.");
+                return true;
+            }
+            switch (args[0].toLowerCase()) {
+                case "help":
+                    showHelpConsole();
+                    return true;
+                case "reload":
+                    ia.log(Level.WARNING, "Reloading plugin...");
+                    try {
+                        ia.loadPlugin();
+                    } catch (Exception e) {
+                        ia.log(Level.WARNING, "An error occured while reloading, please check the console!");
+                        e.printStackTrace();
+                        return true;
+                    }
+                    ia.log(Level.WARNING, "Reload done!");
+                    return true;
+                case "give":
+                    give(args, null);
+                    return true;
+                case "giveitem":
+                    giveItem(args, null);
+                    return true;
+                case "fixitem":
+                    repairItem(args, null);
+                    return true;
+                case "addnbt":
+                    addNBTdata(args, null);
+                    return true;
+                case "addenchant":
+                    addEnchant(args, null);
+                    return true;
+            }
+            showHelpConsole();
+        } else {
+            // Player commands
+            Player player = (Player) sender;
+
+            // Perm checking
+            if (!player.hasPermission(ia.basePerm)) {
+                player.sendMessage(lang.textPrefix + lang.textNoPerm);
                 return false;
             }
 
-            // Argument handling
-            if (args.length == 1) {
-                if (args[0].equals("help")) {
+            if (args.length == 0) {
+                player.sendMessage(lang.textPrefix + lang.textMissingArg);
+                return true;
+            }
+
+            switch (args[0].toLowerCase()) {
+                case "help":
                     showHelp(player);
                     return true;
-                } else if (args[0].equals("reload")) {
+                case "reload":
                     player.sendMessage(lang.textPrefix + "Reloading plugin...");
                     try {
                         ia.loadPlugin();
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         player.sendMessage(lang.textPrefix + ChatColor.RED + "An error occured while reloading, please check the console!");
                         e.printStackTrace();
                         return true;
                     }
                     player.sendMessage(lang.textPrefix + "Reload done!");
                     return true;
-                }
-            } else { // More than 1 argument
-                if (args[0].equals("give")) {
-                    if (!player.hasPermission(ia.givePermission)) {
+                case "give":
+                    if (!player.hasPermission(ia.givePerm)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
-                    if (args[1].equals("help")) {
-                        player.sendMessage(lang.textGiveHelp);
-                        return true;
+                    if (args.length > 1) {
+                        if (args[1].equals("help")) {
+                            player.sendMessage(lang.textGiveHelp);
+                            return true;
+                        }
                     }
                     give(args, player);
                     return true;
-                } else if (args[0].equals("giveitem")) {
-                    if (!player.hasPermission(ia.giveItemPermission)) {
+                case "giveitem":
+                    if (!player.hasPermission(ia.giveItemPerm)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
                     giveItem(args, player);
                     return true;
-                } else if (args[0].equals("fixitem")) {
-                    if (!player.hasPermission(ia.fixItemPermission)) {
+                case "fixitem":
+                    if (!player.hasPermission(ia.fixItemPerm)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
-                    repairItem(args[1], sender);
+                    repairItem(args, sender);
                     return true;
-                } else if (args[0].equals("addnbt")) {
-                    if (!player.hasPermission(ia.nbtPermission)) {
+                case "addnbt":
+                    if (!player.hasPermission(ia.nbtPerm)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
-                    if (args[2].equals("string")) {
-                        addNBTdata(args, sender, DataType.eString);
-                        return true;
-                    } else if (args[2].equals("int")) {
-                        addNBTdata(args, sender, DataType.eInt);
+                    addNBTdata(args, sender);
+                    return true;
+                case "addenchant":
+                    if (!player.hasPermission(ia.addEnchPerm)) {
+                        player.sendMessage(lang.textNoPerm);
                         return true;
                     }
-                    player.sendMessage(lang.textPrefix + ChatColor.RED + "Invalid data type: " + args[2]);
+                    addEnchant(args, sender);
                     return true;
-                }
             }
+
             // Catch unknown arg
             player.sendMessage(lang.textUnknown);
             showHelp(player);
-        } else { // Executed by console
-            if (args.length == 1) {
-                if (args[0].equals("help")) {
-                    showHelpConsole();
-                    return true;
-                } else if (args[0].equals("reload")) {
-                    ia.log(Level.INFO,"Reloading plugin...");
-                    try {
-                        ia.loadPlugin();
-                    } catch(Exception e) {
-                        ia.log(Level.INFO, lang.textPrefix + e);
-                        e.printStackTrace();
-                        return true;
-                    }
-                    ia.log(Level.INFO, "Reload done!");
-                    return true;
-                }
-            } else {
-                if (args[0].equals("give")) {
-                    if (args[1].equals("help")) {
-                        ia.log(Level.INFO, lang.textGiveHelp);
-                        return true;
-                    }
-                    give(args, null);
-                    return true;
-                } else if (args[0].equals("giveitem")) {
-                    giveItem(args, null);
-                    return true;
-                } else if (args[0].equals("fixitem")) {
-                    repairItem(args[1], null);
-                    return true;
-                } else if (args[0].equals("addnbt")) {
-                    if (args[1].equals("string")) {
-                        addNBTdata(args, sender, DataType.eString);
-                        return true;
-                    } else if (args[1].equals("int")) {
-                        addNBTdata(args, sender, DataType.eInt);
-                        return true;
-                    }
-                    ia.log(Level.WARNING, "Invalid data type: " + args[2]);
-                    return true;
-                }
-            }
-            // Catch unknown arg
-            showHelpConsole();
         }
         return true;
     }
 
-    private void repairItem(final String name, CommandSender sender) {
+    private void SendMessage(CommandSender sender, String msg) {
+        ia.log(Level.SEVERE, msg);
+        if (sender != null) { sender.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+    }
 
-        Player target = Bukkit.getPlayer(name);
+    public void addEnchant(final String[] args, final CommandSender sender) {
+
+        if (args.length < 3) {
+            SendMessage(sender, "Not enough arguments!");
+            return;
+        }
+
+        // Get player
+        Player targetPlayer = Bukkit.getPlayer(args[1]);
+        if (targetPlayer == null) {
+            SendMessage(sender, "Cannot find player: " + args[1]);
+            return;
+        }
+
+        ItemStack itemStack = targetPlayer.getInventory().getItemInMainHand();
+        String[] subArgs = args[2].split(":", -1);   // Define array of sub arguments
+
+        // AE Support
+        if (ia.aeSupport) {
+            ia.log(Level.WARNING, "AE support");
+            for (int i = 2; i < args.length; i++) {
+                // Check if amount is int
+                String ae = subArgs[0];
+                ia.log(Level.WARNING, ae);
+                if (AEAPI.isAnEnchantment(ae)) {
+                    ia.log(Level.WARNING, "FOUND");
+                    try {
+                        AEAPI.applyEnchant(ae, Integer.parseInt(subArgs[1]), itemStack);
+                        itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), "ae_enchantment;" + subArgs[0]);
+                        SendMessage(sender, "Not a number: " + args[i]);
+                    }
+                    catch (ArrayIndexOutOfBoundsException ex) {
+                        AEAPI.applyEnchant(ae, 1, itemStack);
+                        itemStack = NBTEditor.set(itemStack, 1, "ae_enchantment;" + subArgs[0]);
+                    }
+                    catch (NumberFormatException ex) {
+                        SendMessage(sender,"Not a number: " + args[i]);
+                        return;
+                    }
+                }
+            }
+        } // End AE Support
+
+        targetPlayer.getInventory().setItem(EquipmentSlot.HAND, itemStack);
+    }
+
+    private void repairItem(final String[] args, CommandSender sender) {
+
+        if (args.length < 2) {
+            String msg = "Not enough arguments!";
+            if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+            ia.log(Level.INFO, msg);
+            return;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
 
         if (target != null) {
             ItemStack handItemStack = target.getInventory().getItemInMainHand();
@@ -169,13 +226,13 @@ public class ItemAttributesCommand implements CommandExecutor {
                     itemMeta.setDamage(0);
                     handItemStack.setItemMeta(itemMeta);
                     if (sender != null) sender.sendMessage(lang.textRepairSuccess);
-                    ia.log(Level.INFO, "Item repaired for " + name);
+                    ia.log(Level.INFO, "Item repaired for " + args[1]);
                     return;
                 }
             }
         } else {
-            if (sender != null) sender.sendMessage(lang.textPlayerNotFound + " (" + name + ")");
-            ia.log(Level.WARNING, "itemfix player not found: " + name);
+            if (sender != null) sender.sendMessage(lang.textPlayerNotFound + " (" + args[1] + ")");
+            ia.log(Level.WARNING, "itemfix player not found: " + args[1]);
             return;
         }
         if (sender != null) sender.sendMessage(lang.textRepairFail);
@@ -190,23 +247,32 @@ public class ItemAttributesCommand implements CommandExecutor {
         Bukkit.getServer().getConsoleSender().sendMessage(lang.textHelp);
     }
 
-    private void addNBTdata(final String[] args, CommandSender sender, DataType type) {
+    private void addNBTdata(final String[] args, CommandSender sender) {
 
-        // 0 = addnbt, 1 = Player, 2 = key:value
-
-        if (args.length < 3) {
+        if (args.length < 4) {
             String msg = "Not enough arguments!";
             if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
             ia.log(Level.INFO, msg);
             return;
         }
 
+        DataType type = DataType.eString;
+
+        if (args[2].equals("string")) {
+            type = DataType.eString;
+        } else if (args[2].equals("int")) {
+            type = DataType.eInt;
+        } else {
+            ia.log(Level.WARNING, lang.textPrefix + ChatColor.RED + "Invalid data type" + args[2]);
+            return;
+        }
+
+        // 0 = addnbt, 1 = Player, 2 = key:value
+
         // Get player
         Player targetPlayer = Bukkit.getPlayer(args[1]);
         if (targetPlayer == null) {
-            String msg = "Cannot find player: " + args[1];
-            ia.log(Level.SEVERE, msg);
-            if (sender != null) { sender.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+            SendMessage(sender, "Cannot find player: " + args[1]);
             return;
         }
 
@@ -228,12 +294,8 @@ public class ItemAttributesCommand implements CommandExecutor {
                 try {
                     newItem = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), subArgs[0]);
                 } catch (Exception e) {
-                    String msg = "Invalid argument - not a number: " + args[3];
-                    if (sender != null) {
-                        sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
-                    } else {
-                        ia.log(Level.INFO, msg);
-                    }
+                    SendMessage(sender,"Invalid argument - not a number: " + args[3]);
+                    return;
                 }
             } else {
                 newItem = NBTEditor.set(itemStack, subArgs[1], subArgs[0]);
@@ -251,6 +313,10 @@ public class ItemAttributesCommand implements CommandExecutor {
 
     private void giveItem(final String[] args, Player player) {
 
+        if (args.length < 3) {
+            SendMessage(player, "Not enough arguments!");
+            return;
+        }
         ia = ItemAttributes.getPlugin(ItemAttributes.class);
 
         // Construct a string of arguments to be used by give()
@@ -263,7 +329,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         List<String> items = ItemsConfig.instance.items; // Custom item list
 
         for (String str : items) {
-            if (Objects.equals(str, item)) {
+            if (Objects.equals(str.toLowerCase(), item.toLowerCase())) {
 
                 // Define config
                 Configuration config = ItemsConfig.instance.getConfig();
@@ -271,9 +337,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 // Verify material
                 String m = config.getString("items." + item + ".Material");
                 if (m == null) {
-                    String msg = "Missing material: " + item;
-                    ia.log(Level.SEVERE, msg);
-                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                    SendMessage(player, "Missing material: " + item);
                     return;
                 }
                 newArg.add(m); // Arg[2] >> Material
@@ -355,28 +419,31 @@ public class ItemAttributesCommand implements CommandExecutor {
 
                 // Parse values as a command for give()
                 give(newArg.toArray(new String[0]), player);
+                return;
             }
         }
+        SendMessage(player, "Item not found: " + item);
     }
 
     private void give(final String[] args, Player player) {
+
+        if (args.length < 3) {
+            SendMessage(player, "Not enough arguments!");
+            return;
+        }
 
         // 0 = give, 1 = Player, 2 = Item, 3+ = name/lore/unbreaking/attributes/enchants
 
         // Get player
         Player targetPlayer = Bukkit.getPlayer(args[1]);
         if (targetPlayer == null) {
-            String msg = "Cannot find player: " + args[1];
-            ia.log(Level.SEVERE, msg);
-            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+            SendMessage(player, "Cannot find player: " + args[1]);
             return;
         }
         // Create item stack
         Material mat = Material.matchMaterial(args[2]);
         if (mat == null) {
-            String msg = "Unknown material: " + args[2];
-            ia.log(Level.SEVERE, msg);
-            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+            SendMessage(player, "Unknown material: " + args[2]);
             return;
         }
 
@@ -393,8 +460,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 if (subArgs.length == 3) {
                     itemStack = NBTEditor.set(itemStack, subArgs[2], subArgs[1]);
                 } else {
-                    String msg = "Invalid nbt arguments: " + arg;
-                    player.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                    SendMessage(player, "Invalid nbt arguments: " + arg);
                     return;
                 }
             } else if (arg.toLowerCase().contains("nbtint:")) {
@@ -402,13 +468,11 @@ public class ItemAttributesCommand implements CommandExecutor {
                     try {
                         itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[2]), subArgs[1]);
                     } catch(Exception e) {
-                        String msg = "Invalid nbt integer: " + arg + ". Value must be an integer.";
-                        player.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                        SendMessage(player, "Invalid nbt integer: " + arg + ". Value must be an integer.");
                         return;
                     }
                 } else {
-                    String msg = "Invalid nbt arguments: " + arg;
-                    player.sendMessage(lang.textPrefix + ChatColor.RED + msg);
+                    SendMessage(player, "Invalid nbt arguments: " + arg);
                     return;
                 }
             }
@@ -486,9 +550,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             if (arg.toLowerCase().contains("fixable:")) {
                 String input = arg.replace("fixable:", "");
                 if (!input.equals("true") && !input.equals("false")) {
-                    String msg = "Fixable must be true or false: " + arg;
-                    ia.log(Level.SEVERE, msg);
-                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                    SendMessage(player, "Fixable must be true or false: " + arg);
                     return;
                 }
                 NamespacedKey key = new NamespacedKey(ia, "fixable");
@@ -507,9 +569,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     continue;
                 }
                 catch (NumberFormatException ex) {
-                    String msg = "Not a number: " + arg;
-                    ia.log(Level.SEVERE, msg);
-                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                    SendMessage(player, "Not a number: " + arg);
                     return;
                 }
             }
@@ -531,9 +591,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     continue;
                 }
                 catch (NumberFormatException ex) {
-                    String msg = "Not a number: " + arg;
-                    ia.log(Level.SEVERE, msg);
-                    if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                    SendMessage(player, "Not a number: " + arg);
                     return;
                 }
             }
@@ -572,9 +630,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     String[] argRange = numArg.split("~", -1);
                     // Make sure range is 2 numbers
                     if (argRange.length > 2) {
-                        String msg = "Cannot recognize range: " + numArg;
-                        ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                        SendMessage(player, "Cannot recognize range: " + numArg);
                         return;
                     }
                     // Verify numbers in range
@@ -582,18 +638,14 @@ public class ItemAttributesCommand implements CommandExecutor {
                         try {
                             range[ii] = (float) Double.parseDouble(argRange[ii]);
                         } catch (NumberFormatException ex) {
-                            String msg = "Cannot parse number: " + argRange[ii];
-                            ia.log(Level.SEVERE, msg);
-                            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                            SendMessage(player, "Cannot parse number: " + argRange[ii]);
                             return;
                         }
                     }
                     // 1 - 10
                     // Get random number
                     if (range[0] >= range[1]) {
-                        String msg = "Min cannot be higher than max: " + Arrays.toString(argRange);
-                        ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                        SendMessage(player, "Min cannot be higher than max: " + Arrays.toString(argRange));
                         return;
                     }
                     num = ((float)Math.random() * (range[1] - range[0])) + range[0];
@@ -601,9 +653,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     try { // Verify number
                         num = (float) Double.parseDouble(numArg);
                     } catch (NumberFormatException ex) {
-                        String msg = "Cannot parse number: " + numArg;
-                        ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                        SendMessage(player, "Cannot parse number: " + numArg);
                         return;
                     }
                 }
@@ -621,9 +671,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         case "legs": slot = EquipmentSlot.LEGS; break;
                         case "offhand": slot = EquipmentSlot.OFF_HAND; break;
                         default:
-                            String msg = "Unknown slot: " + subArgs[2];
-                            ia.log(Level.SEVERE, msg);
-                            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                            SendMessage(player, "Unknown slot: " + subArgs[2]);
                             return;
                     }
                 } else {
@@ -652,9 +700,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             }
 
             // Catch all non-recognized arguments
-            String msg ="Unknown argument: " + arg;
-            ia.log(Level.SEVERE, msg);
-            if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+            SendMessage(player, "Unknown argument: " + arg);
             return;
         } // End For
 
@@ -677,9 +723,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         itemStack = NBTEditor.set(itemStack, 1, "ae_enchantment;" + subArgs[0]);
                     }
                     catch (NumberFormatException ex) {
-                        String msg = "Not a number: " + args[i];
-                        ia.log(Level.SEVERE, msg);
-                        if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+                        SendMessage(player, "Not a number: " + args[i]);
                         return;
                     }
                 }
