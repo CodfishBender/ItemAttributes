@@ -12,6 +12,9 @@ items:
     # (Optional) Supports any vanilla enchant or AdvancedEnchantments
     Enchants: protection:1 unbreaking:1
 
+    # (Optional) Any item flag that is listed here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/inventory/ItemFlag.html
+    Flags: HIDE_ENCHANTS HIDE_PLACED_ON
+
     # (Optional) Possible attributes: armor, toughness, damage, knockback, attackspeed, knockbackres, luck, health, movespeed, unbreakable
     Attributes: armor:2~4 unbreakable
 
@@ -29,3 +32,6 @@ items:
 
     # (Optional) Add any **int** NBT tags onto the item <key>:<value>. Values will be handled as integers.
     TagsInt: ae_enchantment:1
+
+    # (Optional) Leather armour colour in hex format.
+    Colour: 12345678
