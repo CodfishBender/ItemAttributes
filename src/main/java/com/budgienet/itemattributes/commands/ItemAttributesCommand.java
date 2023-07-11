@@ -8,6 +8,7 @@ import com.budgienet.itemattributes.utils.NBTEditor;
 import net.advancedplugins.ae.api.AEAPI;
 import org.bukkit.Bukkit;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
@@ -22,10 +23,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
-import java.util.logging.Level;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.UUID;
+import java.util.List;
+import java.util.Objects;
+import java.util.Collections;
 
 public class ItemAttributesCommand implements CommandExecutor {
 
@@ -39,7 +45,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         if (sender instanceof ConsoleCommandSender) {
             // Console commands
             if (args.length == 0) {
-                ia.log(Level.WARNING, "Missing argument.");
+                ia.log("WARNING", "Missing argument.");
                 return true;
             }
             switch (args[0].toLowerCase()) {
@@ -47,15 +53,15 @@ public class ItemAttributesCommand implements CommandExecutor {
                     showHelpConsole();
                     return true;
                 case "reload":
-                    ia.log(Level.WARNING, "Reloading plugin...");
+                    ia.log("WARNING", "Reloading plugin...");
                     try {
                         ia.loadPlugin();
                     } catch (Exception e) {
-                        ia.log(Level.WARNING, "An error occured while reloading, please check the console!");
+                        ia.log("WARNING", "An error occured while reloading, please check the console!");
                         e.printStackTrace();
                         return true;
                     }
-                    ia.log(Level.WARNING, "Reload done!");
+                    ia.log("WARNING", "Reload done!");
                     return true;
                 case "give":
                     give(args, null);
@@ -155,7 +161,7 @@ public class ItemAttributesCommand implements CommandExecutor {
     }
 
     private void SendMessage(CommandSender sender, String msg) {
-        ia.log(Level.SEVERE, msg);
+        ia.log("SEVERE", msg);
         if (sender != null) { sender.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
     }
 
@@ -178,13 +184,13 @@ public class ItemAttributesCommand implements CommandExecutor {
 
         // AE Support
         if (ia.aeSupport) {
-            ia.log(Level.WARNING, "AE support");
+            ia.log("WARNING", "AE support");
             for (int i = 2; i < args.length; i++) {
                 // Check if amount is int
                 String ae = subArgs[0];
-                ia.log(Level.WARNING, ae);
+                ia.log("WARNING", ae);
                 if (AEAPI.isAnEnchantment(ae)) {
-                    ia.log(Level.WARNING, "FOUND");
+                    ia.log("WARNING", "FOUND");
                     try {
                         AEAPI.applyEnchant(ae, Integer.parseInt(subArgs[1]), itemStack);
                         itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), "ae_enchantment;" + subArgs[0]);
@@ -210,7 +216,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         if (args.length < 2) {
             String msg = "Not enough arguments!";
             if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
-            ia.log(Level.INFO, msg);
+            ia.log(msg);
             return;
         }
 
@@ -226,17 +232,17 @@ public class ItemAttributesCommand implements CommandExecutor {
                     itemMeta.setDamage(0);
                     handItemStack.setItemMeta(itemMeta);
                     if (sender != null) sender.sendMessage(lang.textRepairSuccess);
-                    ia.log(Level.INFO, "Item repaired for " + args[1]);
+                    ia.log("Item repaired for " + args[1]);
                     return;
                 }
             }
         } else {
             if (sender != null) sender.sendMessage(lang.textPlayerNotFound + " (" + args[1] + ")");
-            ia.log(Level.WARNING, "itemfix player not found: " + args[1]);
+            ia.log("WARNING", "itemfix player not found: " + args[1]);
             return;
         }
         if (sender != null) sender.sendMessage(lang.textRepairFail);
-        ia.log(Level.WARNING, "Item repair failed for " + target.getName());
+        ia.log("WARNING", "Item repair failed for " + target.getName());
     }
 
     private void showHelp(final Player player) {
@@ -252,7 +258,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         if (args.length < 4) {
             String msg = "Not enough arguments!";
             if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
-            ia.log(Level.INFO, msg);
+            ia.log(msg);
             return;
         }
 
@@ -263,7 +269,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         } else if (args[2].equals("int")) {
             type = DataType.eInt;
         } else {
-            ia.log(Level.WARNING, lang.textPrefix + ChatColor.RED + "Invalid data type" + args[2]);
+            ia.log("WARNING", lang.textPrefix + ChatColor.RED + "Invalid data type" + args[2]);
             return;
         }
 
@@ -280,7 +286,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         if (targetPlayer.getInventory().getItemInMainHand().getType() == Material.AIR) {
             String msg = "Cannot apply nbt, " + targetPlayer.getName() + " is not holding an item!";
             if (sender != null)  sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
-            ia.log(Level.INFO, msg);
+            ia.log(msg);
             return;
         }
 
@@ -306,7 +312,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             if (sender != null) {
                 sender.sendMessage(lang.textPrefix + ChatColor.RED + msg);
             } else {
-                ia.log(Level.INFO, msg);
+                ia.log(msg);
             }
         }
     }
@@ -396,6 +402,14 @@ public class ItemAttributesCommand implements CommandExecutor {
                     String[] flags = config.getString("items." + item + ".Flags").split(" ");   // Get current argument
                     if (flags.length > 0) {
                         Collections.addAll(newArg, flags); // Arg[3+] >> Attributes
+                    }
+                } catch(NullPointerException ignored) {}
+
+                // Colour
+                try {
+                    String colour = config.getString("items." + item + ".Colour");   // Get current argument
+                    if (colour != null) {
+                        newArg.add("colour:" + colour); // Arg[3+] >> Colour
                     }
                 } catch(NullPointerException ignored) {}
 
@@ -536,6 +550,22 @@ public class ItemAttributesCommand implements CommandExecutor {
                 continue;
             }
 
+            // Set item colour
+            if (meta instanceof LeatherArmorMeta) {
+                if (arg.toLowerCase().contains("colour:")) {
+                    java.awt.Color colourJava;
+                    try {
+                        colourJava = java.awt.Color.decode(arg.replace("colour:", ""));
+                    } catch (Exception ignored) {
+                        SendMessage(player, "Colour must be numerical hex: " + arg);
+                        return;
+                    }
+
+                    Color c = Color.fromRGB(colourJava.getRed(), colourJava.getGreen(), colourJava.getBlue());
+                    ((LeatherArmorMeta) meta).setColor(c);
+                    continue;
+                }
+            }
 
             // Set Permission tag
             // Set perm as persistent data container
@@ -736,7 +766,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         String itemName = (meta.hasDisplayName()) ? meta.getDisplayName() + ChatColor.GOLD + " (" + itemStack.getType().name() + ")" : itemStack.getType().name();
 
         String msg = "Gave " + targetPlayer.getName() + ": " + itemName + totalEnchantments + totalModifiers;
-        ia.log(Level.INFO, msg);
+        ia.log(msg);
 
         // Send player message
         if (player != null) { player.sendMessage(lang.textPrefix + ChatColor.GOLD + msg); }

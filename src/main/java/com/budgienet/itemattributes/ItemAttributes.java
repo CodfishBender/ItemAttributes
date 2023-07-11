@@ -7,7 +7,6 @@ import com.budgienet.itemattributes.configs.LangConfig;
 import com.budgienet.itemattributes.configs.MainConfig;
 import com.jeff_media.armorequipevent.ArmorEquipEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -80,14 +79,24 @@ public final class ItemAttributes extends JavaPlugin {
         // Plugin support
         if (Bukkit.getPluginManager().isPluginEnabled("AdvancedEnchantments")) {
             if (aeSupport) {
-                this.log(Level.INFO,"AdvancedEnchantments support active.");
+                this.log("AdvancedEnchantments support active.");
             } else {
-                this.log(Level.INFO,"AdvancedEnchantments detected, but support is disable in config.");
+                this.log("AdvancedEnchantments detected, but support is disable in config.");
             }
         }
     }
 
-    public void log(Level level, String string) {
-        getLogger().log(level, string);
+    public void log(String string) {
+        getLogger().log(Level.INFO, string);
+    }
+
+    public void log(String level, String string) {
+        Level l = Level.INFO;
+        switch(level) {
+            case "WARNING": l = Level.WARNING; break;
+            case "SEVERE": l = Level.SEVERE; break;
+            case "ALL": l = Level.ALL; break;
+        }
+        getLogger().log(l, string);
     }
 }

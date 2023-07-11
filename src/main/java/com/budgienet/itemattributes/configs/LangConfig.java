@@ -6,7 +6,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.logging.Level;
 
 public class LangConfig {
 
@@ -75,7 +74,7 @@ public class LangConfig {
 
         // Regenerate missing config
         if (!file.exists()) {
-            ia.log(Level.WARNING, fileName + " is missing, generating a new one.");
+            ia.log("WARNING", fileName + " is missing, generating a new one.");
             ia.saveResource(fileName, false);
         }
 
@@ -94,7 +93,7 @@ public class LangConfig {
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         // Missing field
         if (!config.contains(sField)) {
-            ia.log(Level.WARNING, "Adding missing " + sField + " to " + fileName);
+            ia.log("WARNING", "Adding missing " + sField + " to " + fileName);
             config.set(sField, sDefault);
             try {
                 config.save(file);
@@ -106,7 +105,7 @@ public class LangConfig {
         try {
             return ChatColor.translateAlternateColorCodes('&', config.getString(sField));
         } catch(NullPointerException e) {
-            ia.log(Level.SEVERE, "Error loading value from" + sField + " in " + fileName);
+            ia.log("SEVERE", "Error loading value from" + sField + " in " + fileName);
             return ChatColor.translateAlternateColorCodes('&', sDefault);
         }
     }

@@ -3,7 +3,6 @@ package com.budgienet.itemattributes.configs;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 import com.budgienet.itemattributes.ItemAttributes;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,7 +19,7 @@ public class MainConfig {
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         ia.aeSupport = config.getBoolean("PluginSupport.AdvancedEnchantments");
         itemFixBlacklist = config.getStringList("ItemFixBlacklist");
-        if (!itemFixBlacklist.isEmpty()) ia.log(Level.INFO,itemFixBlacklist.size() + " names blacklisted from /fix.");
+        if (!itemFixBlacklist.isEmpty()) ia.log(itemFixBlacklist.size() + " names blacklisted from /fix.");
     }
     public void setup(File dir) {
         if (!dir.exists()) dir.mkdirs();
@@ -28,7 +27,7 @@ public class MainConfig {
         // Regenerate missing config
         file = new File(dir + File.separator + fileName);
         if (!file.exists()) {
-            ia.log(Level.WARNING, "config.yml is missing, generating a new one.");
+            ia.log("WARNING", "config.yml is missing, generating a new one.");
             ia.saveDefaultConfig();
         }
 

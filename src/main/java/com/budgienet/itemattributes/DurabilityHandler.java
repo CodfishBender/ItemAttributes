@@ -16,7 +16,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Objects;
-import java.util.logging.Level;
 
 public class DurabilityHandler implements Listener {
 
@@ -102,7 +101,7 @@ public class DurabilityHandler implements Listener {
                 if (event.getDamage() >= n) event.setDamage(n);
             }
             catch(Exception e){
-                ia.log(Level.SEVERE, "maxduradamage ");
+                ia.log("SEVERE", "maxduradamage ");
             }
         }
     }

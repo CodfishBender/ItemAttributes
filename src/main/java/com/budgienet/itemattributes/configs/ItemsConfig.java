@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 
 import com.budgienet.itemattributes.ItemAttributes;
 import org.bukkit.configuration.ConfigurationSection;
@@ -32,13 +31,13 @@ public class ItemsConfig {
             tempKeys = tempConf.getKeys(false);
             items.addAll(tempKeys);
         } catch (Exception ex) {
-            ia.log(Level.SEVERE, "Could not load items.yml, invalid format.");
+            ia.log("SEVERE", "Could not load items.yml, invalid format.");
         }
 
         if (items.size() > 0) {
-            ia.log(Level.INFO, "Loaded " + items.size() + " custom items.");
+            ia.log("Loaded " + items.size() + " custom items.");
         } else {
-            ia.log(Level.INFO, "No custom items loaded.");
+            ia.log("No custom items loaded.");
         }
     }
     public void setup(File dir) {
@@ -51,7 +50,7 @@ public class ItemsConfig {
 
         // Regenerate missing config
         if (!file.exists()) {
-            ia.log(Level.WARNING, fileName + " is missing, generating a new one.");
+            ia.log("WARNING", fileName + " is missing, generating a new one.");
             ia.saveResource(fileName, false);
         }
 
