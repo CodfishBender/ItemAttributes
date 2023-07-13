@@ -593,9 +593,9 @@ public class ItemAttributesCommand implements CommandExecutor {
             // Set the maximum durability loss from a single hit
             if (arg.toLowerCase().contains("maxduradamage:")) {
                 try {
-                    Integer.parseInt(subArgs[1]); // Test if a number
+                    int amount = Integer.parseInt(subArgs[1]); // Test if a number
                     NamespacedKey key = new NamespacedKey(ia, "maxduradamage");
-                    meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, arg.replace("maxduradamage:", ""));
+                    meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, String.valueOf(amount));
                     continue;
                 }
                 catch (NumberFormatException ex) {
