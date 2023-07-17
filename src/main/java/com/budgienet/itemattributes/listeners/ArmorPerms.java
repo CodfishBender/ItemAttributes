@@ -1,5 +1,6 @@
-package com.budgienet.itemattributes;
+package com.budgienet.itemattributes.listeners;
 
+import com.budgienet.itemattributes.ItemAttributes;
 import com.budgienet.itemattributes.configs.LangConfig;
 import com.jeff_media.armorequipevent.ArmorEquipEvent;
 import org.bukkit.NamespacedKey;

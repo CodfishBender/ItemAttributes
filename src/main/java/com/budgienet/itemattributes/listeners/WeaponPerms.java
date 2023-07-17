@@ -1,5 +1,6 @@
-package com.budgienet.itemattributes;
+package com.budgienet.itemattributes.listeners;
 
+import com.budgienet.itemattributes.ItemAttributes;
 import com.budgienet.itemattributes.configs.LangConfig;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;

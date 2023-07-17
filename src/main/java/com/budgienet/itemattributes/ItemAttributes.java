@@ -5,6 +5,9 @@ import com.budgienet.itemattributes.commands.ItemAttributesCommand;
 import com.budgienet.itemattributes.configs.ItemsConfig;
 import com.budgienet.itemattributes.configs.LangConfig;
 import com.budgienet.itemattributes.configs.MainConfig;
+import com.budgienet.itemattributes.listeners.ArmorPerms;
+import com.budgienet.itemattributes.listeners.DurabilityHandler;
+import com.budgienet.itemattributes.listeners.WeaponPerms;
 import com.jeff_media.armorequipevent.ArmorEquipEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
@@ -13,12 +16,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Level;
 
 public final class ItemAttributes extends JavaPlugin {
 
-    public String basePerm,givePerm,giveItemPerm,fixItemPerm,nbtPerm,addEnchPerm;
+    public String permBase, permGive, permGiveItem, permFixItem, permNbt, permAddEnchant;
     public String[][] attrNames = {{"armor", "GENERIC_ARMOR"},{"toughness", "GENERIC_ARMOR_TOUGHNESS"},{"damage", "GENERIC_ATTACK_DAMAGE"},{"knockback", "GENERIC_ATTACK_KNOCKBACK"},{"attackspeed", "GENERIC_ATTACK_SPEED"},{"knockbackres", "GENERIC_KNOCKBACK_RESISTANCE"},{"luck", "GENERIC_LUCK"},{"health","GENERIC_MAX_HEALTH"},{"movespeed", "GENERIC_MOVEMENT_SPEED"}};
     public List<String> enchNames = new ArrayList<>();
     public List<String> flagNames = new ArrayList<>();
@@ -33,8 +35,8 @@ public final class ItemAttributes extends JavaPlugin {
 
         // Instantiate class listeners
         ArmorEquipEvent.registerListener(this);
-        Objects.requireNonNull(this.getCommand("itemattributes")).setExecutor(new ItemAttributesCommand());
-        Objects.requireNonNull(this.getCommand("itemattributes")).setTabCompleter(new ConstructTabCompleter());
+        getCommand("itemattributes").setExecutor(new ItemAttributesCommand());
+        getCommand("itemattributes").setTabCompleter(new ConstructTabCompleter());
         getServer().getPluginManager().registerEvents(new WeaponPerms(), this);
         getServer().getPluginManager().registerEvents(new ArmorPerms(), this);
         getServer().getPluginManager().registerEvents(new DurabilityHandler(), this);
@@ -51,12 +53,13 @@ public final class ItemAttributes extends JavaPlugin {
         LangConfig.instance.setup(getDataFolder());
 
         // Build variables
-        basePerm = "itemattributes";
-        givePerm = basePerm + ".give";
-        giveItemPerm = basePerm + ".giveitem";
-        fixItemPerm = basePerm + ".fixitem";
-        nbtPerm = basePerm + ".addnbt";
-        addEnchPerm = basePerm + ".addenchant";
+        permBase = "itemattributes";
+        permGive = permBase + ".give";
+        permGiveItem = permBase + ".giveitem";
+        permFixItem = permBase + ".fixitem";
+        permNbt = permBase + ".addnbt";
+        permAddEnchant = permBase + ".addenchant";
+
         enchNames.clear();
         for (Enchantment e : Enchantment.values()) {
             enchNames.add(e.getKey().getKey());

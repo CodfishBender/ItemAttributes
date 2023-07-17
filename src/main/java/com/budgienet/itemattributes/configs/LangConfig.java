@@ -69,7 +69,7 @@ public class LangConfig {
         FileConfiguration config;
         file = new File(dir + File.separator + fileName);
 
-        // Regernatte missing folder
+        // Regenerate missing folder
         if (!dir.exists()) dir.mkdirs();
 
         // Regenerate missing config

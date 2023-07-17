@@ -48,70 +48,33 @@ public class ItemAttributesCommand implements CommandExecutor {
                 ia.log("WARNING", "Missing argument.");
                 return true;
             }
-            switch (args[0].toLowerCase()) {
-                case "help":
-                    showHelpConsole();
-                    return true;
-                case "reload":
-                    ia.log("WARNING", "Reloading plugin...");
-                    try {
-                        ia.loadPlugin();
-                    } catch (Exception e) {
-                        ia.log("WARNING", "An error occured while reloading, please check the console!");
-                        e.printStackTrace();
-                        return true;
-                    }
-                    ia.log("WARNING", "Reload done!");
-                    return true;
-                case "give":
-                    give(args, null);
-                    return true;
-                case "giveitem":
-                    giveItem(args, null);
-                    return true;
-                case "fixitem":
-                    repairItem(args, null);
-                    return true;
-                case "addnbt":
-                    addNBTdata(args, null);
-                    return true;
-                case "addenchant":
-                    addEnchant(args, null);
-                    return true;
-            }
-            showHelpConsole();
+
+            String a = args[0].toLowerCase();
+            if (a.equals("reload")) { reloadPlugin(sender); }
+            else if (a.equals("give")) { give(args, null); }
+            else if (a.equals("giveitem")) { giveItem(args, null); }
+            else if (a.equals("fixitem")) { repairItem(args, null); }
+            else if (a.equals("addnbt")) { addNBTdata(args, null); }
+            else if (a.equals("addenchant")) { addEnchant(args, null); }
+            else { showHelpConsole(); }
+            return true;
         } else {
             // Player commands
             Player player = (Player) sender;
 
             // Perm checking
-            if (!player.hasPermission(ia.basePerm)) {
-                player.sendMessage(lang.textPrefix + lang.textNoPerm);
-                return false;
-            }
-
-            if (args.length == 0) {
-                player.sendMessage(lang.textPrefix + lang.textMissingArg);
-                return true;
-            }
+            if (!player.hasPermission(ia.permBase)) { player.sendMessage(lang.textPrefix + lang.textNoPerm); return false; }
+            if (args.length == 0) { player.sendMessage(lang.textPrefix + lang.textMissingArg); return true; }
 
             switch (args[0].toLowerCase()) {
                 case "help":
                     showHelp(player);
                     return true;
                 case "reload":
-                    player.sendMessage(lang.textPrefix + "Reloading plugin...");
-                    try {
-                        ia.loadPlugin();
-                    } catch (Exception e) {
-                        player.sendMessage(lang.textPrefix + ChatColor.RED + "An error occured while reloading, please check the console!");
-                        e.printStackTrace();
-                        return true;
-                    }
-                    player.sendMessage(lang.textPrefix + "Reload done!");
+                    reloadPlugin(sender);
                     return true;
                 case "give":
-                    if (!player.hasPermission(ia.givePerm)) {
+                    if (!player.hasPermission(ia.permGive)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
@@ -124,28 +87,28 @@ public class ItemAttributesCommand implements CommandExecutor {
                     give(args, player);
                     return true;
                 case "giveitem":
-                    if (!player.hasPermission(ia.giveItemPerm)) {
+                    if (!player.hasPermission(ia.permGiveItem)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
                     giveItem(args, player);
                     return true;
                 case "fixitem":
-                    if (!player.hasPermission(ia.fixItemPerm)) {
+                    if (!player.hasPermission(ia.permFixItem)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
                     repairItem(args, sender);
                     return true;
                 case "addnbt":
-                    if (!player.hasPermission(ia.nbtPerm)) {
+                    if (!player.hasPermission(ia.permNbt)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
                     addNBTdata(args, sender);
                     return true;
                 case "addenchant":
-                    if (!player.hasPermission(ia.addEnchPerm)) {
+                    if (!player.hasPermission(ia.permAddEnchant)) {
                         player.sendMessage(lang.textNoPerm);
                         return true;
                     }
@@ -160,22 +123,33 @@ public class ItemAttributesCommand implements CommandExecutor {
         return true;
     }
 
-    private void SendMessage(CommandSender sender, String msg) {
+    private void ErrorMessage(CommandSender sender, String msg) {
         ia.log("SEVERE", msg);
         if (sender != null) { sender.sendMessage(lang.textPrefix + ChatColor.RED + msg); }
+    }
+
+    private void reloadPlugin(CommandSender sender) {
+        ErrorMessage(sender, "Reloading plugin...");
+        try {
+            ia.loadPlugin();
+        } catch (Exception e) {
+            ErrorMessage(sender, "An error occured while reloading, please check the console!");
+            e.printStackTrace();
+        }
+        ErrorMessage(sender, "Reload done!");
     }
 
     public void addEnchant(final String[] args, final CommandSender sender) {
 
         if (args.length < 3) {
-            SendMessage(sender, "Not enough arguments!");
+            ErrorMessage(sender, "Not enough arguments!");
             return;
         }
 
         // Get player
         Player targetPlayer = Bukkit.getPlayer(args[1]);
         if (targetPlayer == null) {
-            SendMessage(sender, "Cannot find player: " + args[1]);
+            ErrorMessage(sender, "Cannot find player: " + args[1]);
             return;
         }
 
@@ -194,14 +168,14 @@ public class ItemAttributesCommand implements CommandExecutor {
                     try {
                         AEAPI.applyEnchant(ae, Integer.parseInt(subArgs[1]), itemStack);
                         itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), "ae_enchantment;" + subArgs[0]);
-                        SendMessage(sender, "Not a number: " + args[i]);
+                        ErrorMessage(sender, "Not a number: " + args[i]);
                     }
                     catch (ArrayIndexOutOfBoundsException ex) {
                         AEAPI.applyEnchant(ae, 1, itemStack);
                         itemStack = NBTEditor.set(itemStack, 1, "ae_enchantment;" + subArgs[0]);
                     }
                     catch (NumberFormatException ex) {
-                        SendMessage(sender,"Not a number: " + args[i]);
+                        ErrorMessage(sender,"Not a number: " + args[i]);
                         return;
                     }
                 }
@@ -278,7 +252,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         // Get player
         Player targetPlayer = Bukkit.getPlayer(args[1]);
         if (targetPlayer == null) {
-            SendMessage(sender, "Cannot find player: " + args[1]);
+            ErrorMessage(sender, "Cannot find player: " + args[1]);
             return;
         }
 
@@ -300,7 +274,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 try {
                     newItem = NBTEditor.set(itemStack, Integer.parseInt(subArgs[1]), subArgs[0]);
                 } catch (Exception e) {
-                    SendMessage(sender,"Invalid argument - not a number: " + args[3]);
+                    ErrorMessage(sender,"Invalid argument - not a number: " + args[3]);
                     return;
                 }
             } else {
@@ -320,7 +294,7 @@ public class ItemAttributesCommand implements CommandExecutor {
     private void giveItem(final String[] args, Player player) {
 
         if (args.length < 3) {
-            SendMessage(player, "Not enough arguments!");
+            ErrorMessage(player, "Not enough arguments!");
             return;
         }
         ia = ItemAttributes.getPlugin(ItemAttributes.class);
@@ -343,7 +317,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 // Verify material
                 String m = config.getString("items." + item + ".Material");
                 if (m == null) {
-                    SendMessage(player, "Missing material: " + item);
+                    ErrorMessage(player, "Missing material: " + item);
                     return;
                 }
                 newArg.add(m); // Arg[2] >> Material
@@ -436,13 +410,13 @@ public class ItemAttributesCommand implements CommandExecutor {
                 return;
             }
         }
-        SendMessage(player, "Item not found: " + item);
+        ErrorMessage(player, "Item not found: " + item);
     }
 
     private void give(final String[] args, Player player) {
 
         if (args.length < 3) {
-            SendMessage(player, "Not enough arguments!");
+            ErrorMessage(player, "Not enough arguments!");
             return;
         }
 
@@ -451,13 +425,13 @@ public class ItemAttributesCommand implements CommandExecutor {
         // Get player
         Player targetPlayer = Bukkit.getPlayer(args[1]);
         if (targetPlayer == null) {
-            SendMessage(player, "Cannot find player: " + args[1]);
+            ErrorMessage(player, "Cannot find player: " + args[1]);
             return;
         }
         // Create item stack
         Material mat = Material.matchMaterial(args[2]);
         if (mat == null) {
-            SendMessage(player, "Unknown material: " + args[2]);
+            ErrorMessage(player, "Unknown material: " + args[2]);
             return;
         }
 
@@ -474,7 +448,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                 if (subArgs.length == 3) {
                     itemStack = NBTEditor.set(itemStack, subArgs[2], subArgs[1]);
                 } else {
-                    SendMessage(player, "Invalid nbt arguments: " + arg);
+                    ErrorMessage(player, "Invalid nbt arguments: " + arg);
                     return;
                 }
             } else if (arg.toLowerCase().contains("nbtint:")) {
@@ -482,11 +456,11 @@ public class ItemAttributesCommand implements CommandExecutor {
                     try {
                         itemStack = NBTEditor.set(itemStack, Integer.parseInt(subArgs[2]), subArgs[1]);
                     } catch(Exception e) {
-                        SendMessage(player, "Invalid nbt integer: " + arg + ". Value must be an integer.");
+                        ErrorMessage(player, "Invalid nbt integer: " + arg + ". Value must be an integer.");
                         return;
                     }
                 } else {
-                    SendMessage(player, "Invalid nbt arguments: " + arg);
+                    ErrorMessage(player, "Invalid nbt arguments: " + arg);
                     return;
                 }
             }
@@ -499,9 +473,7 @@ public class ItemAttributesCommand implements CommandExecutor {
         // Set item meta based on args
         for (int i = 3; i < args.length; i++) {
 
-            // 0 = give, 1 = Player, 2 = Item, 3+ = name/lore/unbreaking/attributes/enchants
-
-            String arg = args[i];   // Get current argument
+            String arg = args[i];   // Get current argument - 0 = give, 1 = Player, 2 = Item, 3+ = name/lore/unbreaking/attributes/enchants
             String[] subArgs = arg.split(":", -1);   // Define array of sub arguments
 
             // Skip AE Items
@@ -557,7 +529,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     try {
                         colourJava = java.awt.Color.decode(arg.replace("colour:", ""));
                     } catch (Exception ignored) {
-                        SendMessage(player, "Colour must be numerical hex: " + arg);
+                        ErrorMessage(player, "Colour must be numerical hex: " + arg);
                         return;
                     }
 
@@ -580,7 +552,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             if (arg.toLowerCase().contains("fixable:")) {
                 String input = arg.replace("fixable:", "");
                 if (!input.equals("true") && !input.equals("false")) {
-                    SendMessage(player, "Fixable must be true or false: " + arg);
+                    ErrorMessage(player, "Fixable must be true or false: " + arg);
                     return;
                 }
                 NamespacedKey key = new NamespacedKey(ia, "fixable");
@@ -599,7 +571,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     continue;
                 }
                 catch (NumberFormatException ex) {
-                    SendMessage(player, "Not a number: " + arg);
+                    ErrorMessage(player, "Not a number: " + arg);
                     return;
                 }
             }
@@ -621,7 +593,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     continue;
                 }
                 catch (NumberFormatException ex) {
-                    SendMessage(player, "Not a number: " + arg);
+                    ErrorMessage(player, "Not a number: " + arg);
                     return;
                 }
             }
@@ -660,7 +632,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     String[] argRange = numArg.split("~", -1);
                     // Make sure range is 2 numbers
                     if (argRange.length > 2) {
-                        SendMessage(player, "Cannot recognize range: " + numArg);
+                        ErrorMessage(player, "Cannot recognize range: " + numArg);
                         return;
                     }
                     // Verify numbers in range
@@ -668,14 +640,14 @@ public class ItemAttributesCommand implements CommandExecutor {
                         try {
                             range[ii] = (float) Double.parseDouble(argRange[ii]);
                         } catch (NumberFormatException ex) {
-                            SendMessage(player, "Cannot parse number: " + argRange[ii]);
+                            ErrorMessage(player, "Cannot parse number: " + argRange[ii]);
                             return;
                         }
                     }
                     // 1 - 10
                     // Get random number
                     if (range[0] >= range[1]) {
-                        SendMessage(player, "Min cannot be higher than max: " + Arrays.toString(argRange));
+                        ErrorMessage(player, "Min cannot be higher than max: " + Arrays.toString(argRange));
                         return;
                     }
                     num = ((float)Math.random() * (range[1] - range[0])) + range[0];
@@ -683,7 +655,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                     try { // Verify number
                         num = (float) Double.parseDouble(numArg);
                     } catch (NumberFormatException ex) {
-                        SendMessage(player, "Cannot parse number: " + numArg);
+                        ErrorMessage(player, "Cannot parse number: " + numArg);
                         return;
                     }
                 }
@@ -701,7 +673,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         case "legs": slot = EquipmentSlot.LEGS; break;
                         case "offhand": slot = EquipmentSlot.OFF_HAND; break;
                         default:
-                            SendMessage(player, "Unknown slot: " + subArgs[2]);
+                            ErrorMessage(player, "Unknown slot: " + subArgs[2]);
                             return;
                     }
                 } else {
@@ -730,7 +702,7 @@ public class ItemAttributesCommand implements CommandExecutor {
             }
 
             // Catch all non-recognized arguments
-            SendMessage(player, "Unknown argument: " + arg);
+            ErrorMessage(player, "Unknown argument: " + arg);
             return;
         } // End For
 
@@ -753,7 +725,7 @@ public class ItemAttributesCommand implements CommandExecutor {
                         itemStack = NBTEditor.set(itemStack, 1, "ae_enchantment;" + subArgs[0]);
                     }
                     catch (NumberFormatException ex) {
-                        SendMessage(player, "Not a number: " + args[i]);
+                        ErrorMessage(player, "Not a number: " + args[i]);
                         return;
                     }
                 }
